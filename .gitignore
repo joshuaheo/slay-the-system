@@ -1,6 +1,10 @@
 # Prerequisites
 *.d
 
+# Save settings
+saves/*
+!saves/.gitkeep
+
 # Object files
 *.o
 *.ko
