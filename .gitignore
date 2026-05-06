@@ -1,6 +1,9 @@
 # Prerequisites
 *.d
 
+# Build output
+build/
+
 # Save settings
 saves/*
 !saves/.gitkeep
