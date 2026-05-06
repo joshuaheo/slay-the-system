@@ -4,8 +4,8 @@ TARGET = build/game
 SRCS = $(wildcard src/*.c)
 
 all:
-  mkdir -p build
-  $(CC) $(CFLAGS) $(SRCS) -o $(TARGET)
+	mkdir -p build
+	$(CC) $(CFLAGS) $(SRCS) -o $(TARGET)
 
 clean:
-  rm -rf build
+	rm -rf build
