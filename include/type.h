@@ -1,1 +1,157 @@
+#ifndef TYPE_H
+#define TYPE_H
 
+#define MAX_NAME_LEN 64
+#define MAX_DECK_SIZE 100
+#define MAX_HAND_SIZE 10
+#define MAX_RELICS 20
+#define MAX_ENEMIES 3
+#define MAX_FLOOR 15
+#define MAX_STAGE_CHOICES 2
+
+//카드 타입
+typedef enum {
+    CARD_ATTACK,
+    CARD_SKILL,
+    CARD_POWER
+} CardType;
+
+//공용구조체로만 해결되지 않는 카드들
+typedef enum {
+    SPECIAL_NONE
+} SpecialEffect;
+
+//카드 대상범위(개인,전체,무작위,스스로(ex-방어))
+typedef enum {
+    TARGET_ENEMY,
+    TARGET_SELF,
+    TARGET_ALL_ENEMIES,
+    TARGET_RANDOM_ENEMY
+} TargetType;
+
+//카드 공용 구조체(이름, 타입, 적 범위, 코스트, 데미지, 방어도, 힘, 약화, 취약, 카드뽑는수, 에너지획득, 자해, 소멸, 공격횟수)
+typedef struct {
+    char name[MAX_NAME_LEN];
+    char description[128];
+
+    CardType type;
+    TargetType target;
+
+    int cost;
+
+    int damage;
+    int block;
+
+    int strength;
+    int weak;
+    int vulnerable;
+
+    int draw;
+    int energy;
+
+    int hp_loss;
+
+    int exhaust;
+    int hit_count;
+
+    SpecialEffect special; //공용구조체로 해결되지 않는카드 구분
+} Card;
+
+//유물 효과 구분
+typedef enum {
+    RELIC_NONE
+} RelicId;
+
+//유물 설명 및 이름
+typedef struct {
+    RelicId id;
+    char name[MAX_NAME_LEN];
+    char description[128];
+} Relic;
+
+//플레이어 상태
+typedef struct {
+    char name[MAX_NAME_LEN];
+
+    int max_hp;
+    int hp;
+    int block;
+
+    int strength;
+    int weak;
+    int vulnerable;
+
+    Card owned_deck[MAX_DECK_SIZE];
+    int owned_deck_count;
+
+    Card draw_pile[MAX_DECK_SIZE];
+    int draw_count;
+
+    Card hand[MAX_HAND_SIZE];
+    int hand_count;
+
+    Card discard_pile[MAX_DECK_SIZE];
+    int discard_count;
+
+    Card exhaust_pile[MAX_DECK_SIZE];
+    int exhaust_count;
+
+    int gold;
+
+    Relic relics[MAX_RELICS];
+    int relic_count;
+
+    int energy;
+    int max_energy;
+} Player;
+
+//적 상태
+typedef struct {
+    char name[MAX_NAME_LEN];
+
+    int max_hp;
+    int hp;
+    int block;
+
+    int strength;
+    int weak;
+    int vulnerable;
+
+    int damage;
+} Enemy;
+
+//게임상태
+typedef enum {
+    GAME_MENU,
+    GAME_BATTLE,
+    GAME_CLEAR,
+    GAME_OVER
+} GameMode;
+
+//현재 스테이지
+typedef enum {
+    STAGE_ENEMY,
+    STAGE_ELITE,
+    STAGE_REST,
+    STAGE_SHOP,
+    STAGE_CHEST,
+    STAGE_EVENT,
+    STAGE_BOSS
+} StageType;
+
+//스테이지 선택요소
+typedef struct {
+    StageType choices[MAX_STAGE_CHOICES]; //선택 목록
+    int choice_count; //선택 가능 갯수
+} MapFloor;
+
+//세이브용 게임진행상황
+typedef struct {
+    char username[MAX_NAME_LEN];
+
+    Player player;
+ 
+    int floor; //마지막으로 클리어한 층
+} GameState;
+
+#endif
