@@ -174,3 +174,23 @@ int show_login_screen(char *username, int size) {
 
     return 1;
 }
+
+//유효하지않은 아이디일경우 나오는 화면
+void show_invalid_username_screen(void) {
+    int logo_row;
+    int message_row;
+
+    clear();
+
+    logo_row = 3;
+    message_row = 12;
+
+    print_logo(logo_row);
+
+    print_centered(message_row, "잘못된 아이디입니다.");
+    print_centered(message_row + 2, "아이디는 영문자, 숫자, _, - 만 사용할 수 있습니다.");
+    print_centered(message_row + 4, "아무 키나 누르면 다시 입력합니다.");
+
+    refresh();
+    getch();
+}

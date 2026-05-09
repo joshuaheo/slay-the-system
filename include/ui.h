@@ -10,5 +10,5 @@ void init_ui(void);
 void close_ui(void);
 MenuChoice show_start_screen(void);
 int show_login_screen(char *username, int size);
-
+void show_invalid_username_screen(void);
 #endif
