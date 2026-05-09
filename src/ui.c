@@ -129,3 +129,48 @@ MenuChoice show_start_screen(void) {
         }
     }
 }
+
+//로그인 화면 함수
+int show_login_screen(char *username, int size) {
+    int width;
+    int input_col;
+    int logo_row;
+    int input_row;
+
+    if (username == NULL || size <= 0) {
+        return 0;
+    }
+
+    username[0] = '\0';
+
+    clear();
+
+    logo_row = 3;
+    input_row = 12;
+
+    print_logo(logo_row);
+
+    print_centered(input_row, "로그인");
+    print_centered(input_row + 2, "아이디를 입력하세요");
+
+    width = getmaxx(stdscr);
+    input_col = (width - 30) / 2;
+
+    if (input_col < 0) {
+        input_col = 0;
+    }
+
+    mvprintw(input_row + 4, input_col, "> ");
+    refresh();
+
+    echo();
+    curs_set(1);
+
+    move(input_row + 4, input_col + 2);
+    getnstr(username, size - 1);
+
+    noecho();
+    curs_set(0);
+
+    return 1;
+}
