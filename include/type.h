@@ -2,7 +2,7 @@
 #define TYPE_H
 
 #define MAX_NAME_LEN 64
-#define MAX_DECK_SIZE 100
+#define MAX_DECK_SIZE 200
 #define MAX_HAND_SIZE 10
 #define MAX_RELICS 20
 #define MAX_ENEMIES 3

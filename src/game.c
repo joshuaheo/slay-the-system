@@ -30,7 +30,8 @@ void init_new_game(GameState *state, const char *username) {
     player->weak = 0;
     player->vulnerable = 0;
 
-    player->owned_deck_count = 10;
+    init_starting_deck(player);
+
     player->draw_count = 0;
     player->hand_count = 0;
     player->discard_count = 0;

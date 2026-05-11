@@ -195,47 +195,87 @@ void show_invalid_username_screen(void) {
     getch();
 }
 
-//임시 카드 구조체
-typedef struct {
-    const char *name;
-    int cost;
-    const char *short_text;
-    const char *description;
-} TempCardView;
+//전투화면 출력 함수
+
+//전투화면의 큰 구분선을 출력하는 함수
+
+static void print_battle_line(int y, int x, int width)
+{
+    mvhline(y, x, '=', width);
+}
+
+//전투화면의 작은 구분선을 출력하는함수
+
+static void print_battle_dash(int y, int x, int width)
+{
+    mvhline(y, x, '-', width);
+}
 
 //임시 전투화면 출력 함수
-static void print_battle_line(int y, int x)
-{
-    mvprintw(y, x, "======================================================================");
-}
-
-static void print_battle_dash(int y, int x)
-{
-    mvprintw(y, x, "----------------------------------------------------------------------");
-}
 
 void show_temp_battle_screen(const GameState *state)
 {
-    TempCardView hand[10] = {
-        {"타격", 1, "피해 6", "적 하나에게 피해를 6 줍니다."},
-        {"수비", 1, "방어 5", "방어도를 5 얻습니다."},
-        {"강타", 2, "피해 8 / 취약 2", "적 하나에게 피해를 8 주고 취약을 2 부여합니다."},
-        {"타격", 1, "피해 6", "적 하나에게 피해를 6 줍니다."},
-        {"수비", 1, "방어 5", "방어도를 5 얻습니다."},
-        {"타격", 1, "피해 6", "적 하나에게 피해를 6 줍니다."},
-        {"수비", 1, "방어 5", "방어도를 5 얻습니다."},
-        {"타격", 1, "피해 6", "적 하나에게 피해를 6 줍니다."},
-        {"강타", 2, "피해 8 / 취약 2", "적 하나에게 피해를 8 주고 취약을 2 부여합니다."},
-        {"수비", 1, "방어 5", "방어도를 5 얻습니다."}
-    };
+    const Player *player;
+    const Card *selected_card;
 
-    const int battle_width = 70;
+    const int battle_width = 90;
     const int battle_height = 28;
-    const int hand_count = 10;
+    const int max_display_hand = 10;
+    const int card_slot_width = 18;
 
+    int hand_count;
     int selected = 0;
     int ch;
     int i;
+
+    if (state == NULL) {
+        return;
+    }
+
+    player = &state->player;
+
+    hand_count = player->owned_deck_count;
+
+    if (hand_count > max_display_hand) {
+        hand_count = max_display_hand;
+    }
+
+    if (hand_count <= 0) {
+        while (1) {
+            int start_y = (LINES - battle_height) / 3;
+            int start_x = (COLS - battle_width) / 2;
+
+            if (start_y < 0) {
+                start_y = 0;
+            }
+
+            if (start_x < 0) {
+                start_x = 0;
+            }
+
+            clear();
+
+            print_battle_line(start_y + 0, start_x, battle_width);
+            mvprintw(start_y + 1, start_x,
+                     "Floor %-3d        Gold %-4d        Relic: 없음",
+                     state->floor,
+                     player->gold);
+            print_battle_line(start_y + 2, start_x, battle_width);
+
+            mvprintw(start_y + 4, start_x, "현재 표시할 카드가 없습니다.");
+            mvprintw(start_y + 6, start_x, "Q 종료");
+
+            refresh();
+
+            ch = getch();
+
+            if (ch == 'q' || ch == 'Q') {
+                break;
+            }
+        }
+
+        return;
+    }
 
     while (1) {
         int start_y = (LINES - battle_height) / 3;
@@ -249,14 +289,24 @@ void show_temp_battle_screen(const GameState *state)
             start_x = 0;
         }
 
+        if (selected < 0) {
+            selected = 0;
+        }
+
+        if (selected >= hand_count) {
+            selected = hand_count - 1;
+        }
+
+        selected_card = &player->owned_deck[selected];
+
         clear();
 
-        print_battle_line(start_y + 0, start_x);
+        print_battle_line(start_y + 0, start_x, battle_width);
         mvprintw(start_y + 1, start_x,
                  "Floor %-3d        Gold %-4d        Relic: 없음",
                  state->floor,
-                 state->player.gold);
-        print_battle_line(start_y + 2, start_x);
+                 player->gold);
+        print_battle_line(start_y + 2, start_x, battle_width);
 
         mvprintw(start_y + 4, start_x, "Enemy: Slime");
         mvprintw(start_y + 5, start_x,
@@ -264,44 +314,42 @@ void show_temp_battle_screen(const GameState *state)
         mvprintw(start_y + 6, start_x,
                  "Intent: Attack 6");
 
-        print_battle_dash(start_y + 8, start_x);
+        print_battle_dash(start_y + 8, start_x, battle_width);
 
         mvprintw(start_y + 10, start_x,
                  "Player: %s",
-                 state->player.name);
+                 player->name);
         mvprintw(start_y + 11, start_x,
                  "HP %d/%d   Block %d   Energy %d/%d   Str %d   Weak %d   Vul %d",
-                 state->player.hp,
-                 state->player.max_hp,
-                 state->player.block,
-                 state->player.energy,
-                 state->player.max_energy,
-                 state->player.strength,
-                 state->player.weak,
-                 state->player.vulnerable);
+                 player->hp,
+                 player->max_hp,
+                 player->block,
+                 player->energy,
+                 player->max_energy,
+                 player->strength,
+                 player->weak,
+                 player->vulnerable);
 
-        print_battle_line(start_y + 13, start_x);
+        print_battle_line(start_y + 13, start_x, battle_width);
 
         mvprintw(start_y + 14, start_x, "Selected Card");
 
         mvprintw(start_y + 16, start_x,
                  "%s   Cost %d",
-                 hand[selected].name,
-                 hand[selected].cost);
+                 selected_card->name,
+                 selected_card->cost);
+
         mvprintw(start_y + 17, start_x,
                  "%s",
-                 hand[selected].description);
-        mvprintw(start_y + 18, start_x,
-                 "효과 요약: %s",
-                 hand[selected].short_text);
+                 selected_card->description);
 
-        print_battle_line(start_y + 19, start_x);
+        print_battle_line(start_y + 19, start_x, battle_width);
 
         mvprintw(start_y + 21, start_x, "Hand");
 
         for (i = 0; i < hand_count; i++) {
             int row = start_y + 22 + (i / 5);
-            int col = start_x + (i % 5) * 14;
+            int col = start_x + (i % 5) * card_slot_width;
 
             if (i == selected) {
                 attron(A_REVERSE);
@@ -310,8 +358,8 @@ void show_temp_battle_screen(const GameState *state)
             mvprintw(row, col,
                      "[%d]%s(%d)",
                      i + 1,
-                     hand[i].name,
-                     hand[i].cost);
+                     player->owned_deck[i].name,
+                     player->owned_deck[i].cost);
 
             if (i == selected) {
                 attroff(A_REVERSE);
@@ -340,7 +388,7 @@ void show_temp_battle_screen(const GameState *state)
         } else if (ch == '\n' || ch == KEY_ENTER) {
             mvprintw(start_y + 27, start_x,
                      "%s 선택됨. 아직 카드 사용 기능은 구현하지 않았습니다.",
-                     hand[selected].name);
+                     selected_card->name);
             refresh();
             getch();
         } else if (ch == 'q' || ch == 'Q') {

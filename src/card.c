@@ -1,4 +1,5 @@
 #include "card.h"
+#include <stddef.h>
 
 //카드 인덱스
 enum {
@@ -551,7 +552,7 @@ Card get_card_from_pool(int index)
 //자신의 카드덱에 카드를 추가하는 함수
 int add_card_to_deck(Player *player, Card card)
 {
-    if (player == 0) {
+    if (player == NULL) {
         return 0;
     }
 
@@ -570,13 +571,19 @@ void init_starting_deck(Player *player)
 {
     int i;
 
-    if (player == 0) {
+    if (player == NULL) {
         return;
     }
 
     player->owned_deck_count = 0;
 
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < 5; i++) {
         add_card_to_deck(player, get_card_from_pool(CARD_INDEX_STRIKE));
     }
+
+    for (i = 0; i < 4; i++) {
+        add_card_to_deck(player, get_card_from_pool(CARD_INDEX_DEFEND));
+    }
+
+    add_card_to_deck(player, get_card_from_pool(CARD_INDEX_BASH));
 }
