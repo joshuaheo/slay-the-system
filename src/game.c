@@ -1,5 +1,6 @@
 #include <string.h>
 #include "game.h"
+#include "card.h"
 
 // Player에 대한 정보를 게임 시작 상태로 초기화하는 함수
 void init_new_game(GameState *state, const char *username) {

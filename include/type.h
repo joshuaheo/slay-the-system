@@ -29,12 +29,21 @@ typedef enum {
     TARGET_RANDOM_ENEMY
 } TargetType;
 
-//카드 공용 구조체(이름, 타입, 적 범위, 코스트, 데미지, 방어도, 힘, 약화, 취약, 카드뽑는수, 에너지획득, 자해, 소멸, 공격횟수)
+//카드 희귀도(시작,일반,고급,희귀)
+typedef enum {
+    CARD_START,
+    CARD_COMMON,
+    CARD_UNCOMMON,
+    CARD_RARE
+} CardRarity;
+
+//카드 공용 구조체(이름, 타입, 희귀도, 적 범위, 코스트, 데미지, 방어도, 힘, 약화, 취약, 카드뽑는수, 에너지획득, 자해, 소멸, 공격횟수)
 typedef struct {
     char name[MAX_NAME_LEN];
     char description[128];
 
     CardType type;
+    CardRarity rarity;
     TargetType target;
 
     int cost;
