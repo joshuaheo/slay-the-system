@@ -43,20 +43,8 @@ int main(void) {
                 return 1;
             }
         }
-
+        show_temp_battle_screen(&state);
         close_ui();
-
-        if (has_save) {
-            printf("기존 세이브 파일 불러오기 성공\n");
-        } else {
-            printf("새 세이브 파일 생성 성공\n");
-        }
-
-        printf("username: %s\n", state.username);
-        printf("floor: %d\n", state.floor);
-        printf("hp: %d / %d\n", state.player.hp, state.player.max_hp);
-        printf("gold: %d\n", state.player.gold);
-        printf("owned deck count: %d\n", state.player.owned_deck_count);
     } else if (choice == MENU_EXIT) {
         close_ui();
         printf("종료 선택됨\n");

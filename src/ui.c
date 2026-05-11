@@ -194,3 +194,157 @@ void show_invalid_username_screen(void) {
     refresh();
     getch();
 }
+
+//임시 카드 구조체
+typedef struct {
+    const char *name;
+    int cost;
+    const char *short_text;
+    const char *description;
+} TempCardView;
+
+//임시 전투화면 출력 함수
+static void print_battle_line(int y, int x)
+{
+    mvprintw(y, x, "======================================================================");
+}
+
+static void print_battle_dash(int y, int x)
+{
+    mvprintw(y, x, "----------------------------------------------------------------------");
+}
+
+void show_temp_battle_screen(const GameState *state)
+{
+    TempCardView hand[10] = {
+        {"타격", 1, "피해 6", "적 하나에게 피해를 6 줍니다."},
+        {"수비", 1, "방어 5", "방어도를 5 얻습니다."},
+        {"강타", 2, "피해 8 / 취약 2", "적 하나에게 피해를 8 주고 취약을 2 부여합니다."},
+        {"타격", 1, "피해 6", "적 하나에게 피해를 6 줍니다."},
+        {"수비", 1, "방어 5", "방어도를 5 얻습니다."},
+        {"타격", 1, "피해 6", "적 하나에게 피해를 6 줍니다."},
+        {"수비", 1, "방어 5", "방어도를 5 얻습니다."},
+        {"타격", 1, "피해 6", "적 하나에게 피해를 6 줍니다."},
+        {"강타", 2, "피해 8 / 취약 2", "적 하나에게 피해를 8 주고 취약을 2 부여합니다."},
+        {"수비", 1, "방어 5", "방어도를 5 얻습니다."}
+    };
+
+    const int battle_width = 70;
+    const int battle_height = 28;
+    const int hand_count = 10;
+
+    int selected = 0;
+    int ch;
+    int i;
+
+    while (1) {
+        int start_y = (LINES - battle_height) / 3;
+        int start_x = (COLS - battle_width) / 2;
+
+        if (start_y < 0) {
+            start_y = 0;
+        }
+
+        if (start_x < 0) {
+            start_x = 0;
+        }
+
+        clear();
+
+        print_battle_line(start_y + 0, start_x);
+        mvprintw(start_y + 1, start_x,
+                 "Floor %-3d        Gold %-4d        Relic: 없음",
+                 state->floor,
+                 state->player.gold);
+        print_battle_line(start_y + 2, start_x);
+
+        mvprintw(start_y + 4, start_x, "Enemy: Slime");
+        mvprintw(start_y + 5, start_x,
+                 "HP 30/30   Block 0   Str 0   Weak 0   Vul 0");
+        mvprintw(start_y + 6, start_x,
+                 "Intent: Attack 6");
+
+        print_battle_dash(start_y + 8, start_x);
+
+        mvprintw(start_y + 10, start_x,
+                 "Player: %s",
+                 state->player.name);
+        mvprintw(start_y + 11, start_x,
+                 "HP %d/%d   Block %d   Energy %d/%d   Str %d   Weak %d   Vul %d",
+                 state->player.hp,
+                 state->player.max_hp,
+                 state->player.block,
+                 state->player.energy,
+                 state->player.max_energy,
+                 state->player.strength,
+                 state->player.weak,
+                 state->player.vulnerable);
+
+        print_battle_line(start_y + 13, start_x);
+
+        mvprintw(start_y + 14, start_x, "Selected Card");
+
+        mvprintw(start_y + 16, start_x,
+                 "%s   Cost %d",
+                 hand[selected].name,
+                 hand[selected].cost);
+        mvprintw(start_y + 17, start_x,
+                 "%s",
+                 hand[selected].description);
+        mvprintw(start_y + 18, start_x,
+                 "효과 요약: %s",
+                 hand[selected].short_text);
+
+        print_battle_line(start_y + 19, start_x);
+
+        mvprintw(start_y + 21, start_x, "Hand");
+
+        for (i = 0; i < hand_count; i++) {
+            int row = start_y + 22 + (i / 5);
+            int col = start_x + (i % 5) * 14;
+
+            if (i == selected) {
+                attron(A_REVERSE);
+            }
+
+            mvprintw(row, col,
+                     "[%d]%s(%d)",
+                     i + 1,
+                     hand[i].name,
+                     hand[i].cost);
+
+            if (i == selected) {
+                attroff(A_REVERSE);
+            }
+        }
+
+        mvprintw(start_y + 25, start_x,
+                 "← → 선택   A/D 선택   Enter 확인   Q 종료");
+
+        refresh();
+
+        ch = getch();
+
+        if (ch == KEY_LEFT || ch == 'a' || ch == 'A') {
+            selected--;
+
+            if (selected < 0) {
+                selected = hand_count - 1;
+            }
+        } else if (ch == KEY_RIGHT || ch == 'd' || ch == 'D') {
+            selected++;
+
+            if (selected >= hand_count) {
+                selected = 0;
+            }
+        } else if (ch == '\n' || ch == KEY_ENTER) {
+            mvprintw(start_y + 27, start_x,
+                     "%s 선택됨. 아직 카드 사용 기능은 구현하지 않았습니다.",
+                     hand[selected].name);
+            refresh();
+            getch();
+        } else if (ch == 'q' || ch == 'Q') {
+            break;
+        }
+    }
+}
