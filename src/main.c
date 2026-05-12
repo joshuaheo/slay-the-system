@@ -4,6 +4,7 @@
 #include "login.h"
 #include "save.h"
 #include "game.h"
+#include "card.h"
 
 int main(void) {
     MenuChoice choice;
@@ -43,6 +44,9 @@ int main(void) {
                 return 1;
             }
         }
+
+        prepare_battle_deck(&state.player);
+
         show_temp_battle_screen(&state);
         close_ui();
     } else if (choice == MENU_EXIT) {

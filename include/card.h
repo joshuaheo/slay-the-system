@@ -8,4 +8,8 @@ Card get_card_from_pool(int index);
 int add_card_to_deck(Player *player, Card card);
 void init_starting_deck(Player *player);
 
+void prepare_battle_deck(Player *player);
+void shuffle_draw_pile(Player *player);
+void draw_cards(Player *player, int count);
+void discard_hand(Player *player);
 #endif

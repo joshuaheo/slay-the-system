@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <wchar.h>
 #include "ui.h"
+#include "card.h"
 
 //ncurses 시작 함수
 void init_ui(void) {
@@ -213,9 +214,9 @@ static void print_battle_dash(int y, int x, int width)
 
 //임시 전투화면 출력 함수
 
-void show_temp_battle_screen(const GameState *state)
+void show_temp_battle_screen( GameState *state)
 {
-    const Player *player;
+    Player *player;
     const Card *selected_card;
 
     const int battle_width = 90;
@@ -234,7 +235,7 @@ void show_temp_battle_screen(const GameState *state)
 
     player = &state->player;
 
-    hand_count = player->owned_deck_count;
+    hand_count = player->hand_count;
 
     if (hand_count > max_display_hand) {
         hand_count = max_display_hand;
@@ -297,7 +298,7 @@ void show_temp_battle_screen(const GameState *state)
             selected = hand_count - 1;
         }
 
-        selected_card = &player->owned_deck[selected];
+        selected_card = &player->hand[selected];
 
         clear();
 
@@ -358,8 +359,8 @@ void show_temp_battle_screen(const GameState *state)
             mvprintw(row, col,
                      "[%d]%s(%d)",
                      i + 1,
-                     player->owned_deck[i].name,
-                     player->owned_deck[i].cost);
+                     player->hand[i].name,
+                     player->hand[i].cost);
 
             if (i == selected) {
                 attroff(A_REVERSE);
@@ -367,7 +368,7 @@ void show_temp_battle_screen(const GameState *state)
         }
 
         mvprintw(start_y + 25, start_x,
-                 "← → 선택   A/D 선택   Enter 확인   Q 종료");
+                 "← → 선택   A/D 선택   Enter 확인   E 턴 종료   Q 종료");
 
         refresh();
 
@@ -394,5 +395,19 @@ void show_temp_battle_screen(const GameState *state)
         } else if (ch == 'q' || ch == 'Q') {
             break;
         }
+         else if (ch == 'e' || ch == 'E') {
+    discard_hand(player);
+    draw_cards(player, 5);
+
+    hand_count = player->hand_count;
+
+    if (selected >= hand_count) {
+        selected = hand_count - 1;
+    }
+
+    if (selected < 0) {
+        selected = 0;
+    }
+}
     }
 }

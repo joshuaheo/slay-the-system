@@ -1,5 +1,7 @@
 #include "card.h"
 #include <stddef.h>
+#include <stdlib.h>
+#include <time.h>
 
 //카드 인덱스
 enum {
@@ -586,4 +588,140 @@ void init_starting_deck(Player *player)
     }
 
     add_card_to_deck(player, get_card_from_pool(CARD_INDEX_BASH));
+}
+
+//랜덤 시드를 프로그램 실행 중 한 번만 설정하는 함수
+static void seed_random_once(void)
+{
+    static int seeded = 0;
+
+    if (seeded == 0) {
+        srand((unsigned int)time(NULL));
+        seeded = 1;
+    }
+}
+
+//draw_pile 카드 순서를 랜덤하게 섞는 함수
+void shuffle_draw_pile(Player *player)
+{
+    int i;
+
+    if (player == NULL) {
+        return;
+    }
+
+    seed_random_once();
+
+    for (i = player->draw_count - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        Card temp = player->draw_pile[i];
+
+        player->draw_pile[i] = player->draw_pile[j];
+        player->draw_pile[j] = temp;
+    }
+}
+
+//버림더미에 있는 카드들을 드로우 더미로 옮기는 함수
+static void move_discard_to_draw(Player *player)
+{
+    int i;
+
+    if (player == NULL) {
+        return;
+    }
+
+    if (player->discard_count <= 0) {
+        return;
+    }
+
+    player->draw_count = 0;
+
+    for (i = 0; i < player->discard_count; i++) {
+        if (player->draw_count < MAX_DECK_SIZE) {
+            player->draw_pile[player->draw_count] = player->discard_pile[i];
+            player->draw_count++;
+        }
+    }
+
+    player->discard_count = 0;
+
+    shuffle_draw_pile(player);
+}
+
+//드로우 더미에서 카드를 count장 뽑는 함수
+void draw_cards(Player *player, int count)
+{
+    int i;
+    Card drawn_card;
+
+    if (player == NULL) {
+        return;
+    }
+
+    for (i = 0; i < count; i++) {
+        if (player->draw_count <= 0) {
+            move_discard_to_draw(player);
+        }
+
+        if (player->draw_count <= 0) {
+            return;
+        }
+
+        player->draw_count--;
+        drawn_card = player->draw_pile[player->draw_count];
+
+        if (player->hand_count < MAX_HAND_SIZE) {
+            player->hand[player->hand_count] = drawn_card;
+            player->hand_count++;
+        } else {
+            if (player->discard_count < MAX_DECK_SIZE) {
+                player->discard_pile[player->discard_count] = drawn_card;
+                player->discard_count++;
+            }
+        }
+    }
+}
+
+//현재 손패를 전부 버림더미에 보내는 함수
+void discard_hand(Player *player)
+{
+    int i;
+
+    if (player == NULL) {
+        return;
+    }
+
+    for (i = 0; i < player->hand_count; i++) {
+        if (player->discard_count < MAX_DECK_SIZE) {
+            player->discard_pile[player->discard_count] = player->hand[i];
+            player->discard_count++;
+        }
+    }
+
+    player->hand_count = 0;
+}
+
+//전투시작 전 카드더미를 준비하는 함수
+void prepare_battle_deck(Player *player)
+{
+    int i;
+
+    if (player == NULL) {
+        return;
+    }
+
+    player->draw_count = 0;
+    player->hand_count = 0;
+    player->discard_count = 0;
+    player->exhaust_count = 0;
+
+    for (i = 0; i < player->owned_deck_count; i++) {
+        if (player->draw_count < MAX_DECK_SIZE) {
+            player->draw_pile[player->draw_count] = player->owned_deck[i];
+            player->draw_count++;
+        }
+    }
+
+    shuffle_draw_pile(player);
+    draw_cards(player, 5);
 }

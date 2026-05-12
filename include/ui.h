@@ -14,5 +14,5 @@ MenuChoice show_start_screen(void);
 int show_login_screen(char *username, int size);
 void show_invalid_username_screen(void);
 
-void show_temp_battle_screen(const GameState *state);
+void show_temp_battle_screen( GameState *state);
 #endif
