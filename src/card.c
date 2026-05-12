@@ -590,17 +590,6 @@ void init_starting_deck(Player *player)
     add_card_to_deck(player, get_card_from_pool(CARD_INDEX_BASH));
 }
 
-//랜덤 시드를 프로그램 실행 중 한 번만 설정하는 함수
-static void seed_random_once(void)
-{
-    static int seeded = 0;
-
-    if (seeded == 0) {
-        srand((unsigned int)time(NULL));
-        seeded = 1;
-    }
-}
-
 //draw_pile 카드 순서를 랜덤하게 섞는 함수
 void shuffle_draw_pile(Player *player)
 {
@@ -609,8 +598,6 @@ void shuffle_draw_pile(Player *player)
     if (player == NULL) {
         return;
     }
-
-    seed_random_once();
 
     for (i = player->draw_count - 1; i > 0; i--) {
         int j = rand() % (i + 1);

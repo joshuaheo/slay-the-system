@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <wchar.h>
+#include "battle.h"
 #include "ui.h"
 #include "card.h"
 
@@ -212,12 +213,35 @@ static void print_battle_dash(int y, int x, int width)
     mvhline(y, x, '-', width);
 }
 
+//임시 적(슬라임)
+
+static void init_temp_enemy(Enemy *enemy)
+{
+    if (enemy == NULL) {
+        return;
+    }
+
+    strncpy(enemy->name, "Slime", MAX_NAME_LEN - 1);
+    enemy->name[MAX_NAME_LEN - 1] = '\0';
+
+    enemy->max_hp = 30;
+    enemy->hp = 30;
+    enemy->block = 0;
+    enemy->strength = 0;
+    enemy->weak = 0;
+    enemy->vulnerable = 0;
+}
+
 //임시 전투화면 출력 함수
 
-void show_temp_battle_screen( GameState *state)
+void show_temp_battle_screen(GameState *state)
 {
     Player *player;
     const Card *selected_card;
+
+    Enemy enemies[1];
+    int enemy_count = 1;
+    int target_index = 0;
 
     const int battle_width = 90;
     const int battle_height = 28;
@@ -235,48 +259,7 @@ void show_temp_battle_screen( GameState *state)
 
     player = &state->player;
 
-    hand_count = player->hand_count;
-
-    if (hand_count > max_display_hand) {
-        hand_count = max_display_hand;
-    }
-
-    if (hand_count <= 0) {
-        while (1) {
-            int start_y = (LINES - battle_height) / 3;
-            int start_x = (COLS - battle_width) / 2;
-
-            if (start_y < 0) {
-                start_y = 0;
-            }
-
-            if (start_x < 0) {
-                start_x = 0;
-            }
-
-            clear();
-
-            print_battle_line(start_y + 0, start_x, battle_width);
-            mvprintw(start_y + 1, start_x,
-                     "Floor %-3d        Gold %-4d        Relic: 없음",
-                     state->floor,
-                     player->gold);
-            print_battle_line(start_y + 2, start_x, battle_width);
-
-            mvprintw(start_y + 4, start_x, "현재 표시할 카드가 없습니다.");
-            mvprintw(start_y + 6, start_x, "Q 종료");
-
-            refresh();
-
-            ch = getch();
-
-            if (ch == 'q' || ch == 'Q') {
-                break;
-            }
-        }
-
-        return;
-    }
+    init_temp_enemy(&enemies[0]);
 
     while (1) {
         int start_y = (LINES - battle_height) / 3;
@@ -290,15 +273,19 @@ void show_temp_battle_screen( GameState *state)
             start_x = 0;
         }
 
+        hand_count = player->hand_count;
+
+        if (hand_count > max_display_hand) {
+            hand_count = max_display_hand;
+        }
+
         if (selected < 0) {
             selected = 0;
         }
 
-        if (selected >= hand_count) {
+        if (hand_count > 0 && selected >= hand_count) {
             selected = hand_count - 1;
         }
-
-        selected_card = &player->hand[selected];
 
         clear();
 
@@ -309,9 +296,15 @@ void show_temp_battle_screen( GameState *state)
                  player->gold);
         print_battle_line(start_y + 2, start_x, battle_width);
 
-        mvprintw(start_y + 4, start_x, "Enemy: Slime");
+        mvprintw(start_y + 4, start_x, "Enemy: %s", enemies[0].name);
         mvprintw(start_y + 5, start_x,
-                 "HP 30/30   Block 0   Str 0   Weak 0   Vul 0");
+                 "HP %d/%d   Block %d   Str %d   Weak %d   Vul %d",
+                 enemies[0].hp,
+                 enemies[0].max_hp,
+                 enemies[0].block,
+                 enemies[0].strength,
+                 enemies[0].weak,
+                 enemies[0].vulnerable);
         mvprintw(start_y + 6, start_x,
                  "Intent: Attack 6");
 
@@ -335,14 +328,23 @@ void show_temp_battle_screen( GameState *state)
 
         mvprintw(start_y + 14, start_x, "Selected Card");
 
-        mvprintw(start_y + 16, start_x,
-                 "%s   Cost %d",
-                 selected_card->name,
-                 selected_card->cost);
+        if (hand_count > 0) {
+            selected_card = &player->hand[selected];
 
-        mvprintw(start_y + 17, start_x,
-                 "%s",
-                 selected_card->description);
+            mvprintw(start_y + 16, start_x,
+                     "%s   Cost %d",
+                     selected_card->name,
+                     selected_card->cost);
+
+            mvprintw(start_y + 17, start_x,
+                     "%s",
+                     selected_card->description);
+        } else {
+            selected_card = NULL;
+
+            mvprintw(start_y + 16, start_x,
+                     "현재 손패에 카드가 없습니다.");
+        }
 
         print_battle_line(start_y + 19, start_x, battle_width);
 
@@ -367,47 +369,105 @@ void show_temp_battle_screen( GameState *state)
             }
         }
 
+        if (enemies[0].hp <= 0) {
+            mvprintw(start_y + 24, start_x,
+                     "적을 처치했습니다. Q를 눌러 임시 전투를 종료하세요.");
+        } else if (player->hp <= 0) {
+            mvprintw(start_y + 24, start_x,
+                     "플레이어가 쓰러졌습니다. Q를 눌러 임시 전투를 종료하세요.");
+        }
+
         mvprintw(start_y + 25, start_x,
-                 "← → 선택   A/D 선택   Enter 확인   E 턴 종료   Q 종료");
+                 "← → 선택   A/D 선택   Enter 사용   E 턴 종료   Q 종료");
 
         refresh();
 
         ch = getch();
 
         if (ch == KEY_LEFT || ch == 'a' || ch == 'A') {
-            selected--;
+            if (hand_count > 0) {
+                selected--;
 
-            if (selected < 0) {
-                selected = hand_count - 1;
+                if (selected < 0) {
+                    selected = hand_count - 1;
+                }
             }
         } else if (ch == KEY_RIGHT || ch == 'd' || ch == 'D') {
-            selected++;
+            if (hand_count > 0) {
+                selected++;
 
-            if (selected >= hand_count) {
-                selected = 0;
+                if (selected >= hand_count) {
+                    selected = 0;
+                }
             }
         } else if (ch == '\n' || ch == KEY_ENTER) {
-            mvprintw(start_y + 27, start_x,
-                     "%s 선택됨. 아직 카드 사용 기능은 구현하지 않았습니다.",
-                     selected_card->name);
-            refresh();
-            getch();
+            if (hand_count <= 0) {
+                mvprintw(start_y + 27, start_x,
+                         "사용할 카드가 없습니다.");
+                refresh();
+                getch();
+            } else if (enemies[0].hp <= 0) {
+                mvprintw(start_y + 27, start_x,
+                         "이미 적을 처치했습니다.");
+                refresh();
+                getch();
+            } else if (player->hp <= 0) {
+                mvprintw(start_y + 27, start_x,
+                         "플레이어가 쓰러져 카드를 사용할 수 없습니다.");
+                refresh();
+                getch();
+            } else if (play_card(player, enemies, enemy_count, selected, target_index)) {
+                hand_count = player->hand_count;
+
+                if (hand_count > max_display_hand) {
+                    hand_count = max_display_hand;
+                }
+
+                if (hand_count <= 0) {
+                    selected = 0;
+                } else if (selected >= hand_count) {
+                    selected = hand_count - 1;
+                }
+            } else {
+                mvprintw(start_y + 27, start_x,
+                         "카드를 사용할 수 없습니다. 에너지 또는 대상 상태를 확인하세요.");
+                refresh();
+                getch();
+            }
+        } else if (ch == 'e' || ch == 'E') {
+            if (player->hp <= 0) {
+                mvprintw(start_y + 27, start_x,
+                         "플레이어가 쓰러져 턴을 종료할 수 없습니다.");
+                refresh();
+                getch();
+            } else if (enemies[0].hp <= 0) {
+                mvprintw(start_y + 27, start_x,
+                         "이미 적을 처치했습니다.");
+                refresh();
+                getch();
+            } else {
+                discard_hand(player);
+
+                player->block = 0;
+                decrease_turn_statuses(player, enemies, enemy_count);
+                player->energy = player->max_energy;
+
+                draw_cards(player, 5);
+
+                hand_count = player->hand_count;
+
+                if (hand_count > max_display_hand) {
+                    hand_count = max_display_hand;
+                }
+
+                if (hand_count <= 0) {
+                    selected = 0;
+                } else if (selected >= hand_count) {
+                    selected = hand_count - 1;
+                }
+            }
         } else if (ch == 'q' || ch == 'Q') {
             break;
         }
-         else if (ch == 'e' || ch == 'E') {
-    discard_hand(player);
-    draw_cards(player, 5);
-
-    hand_count = player->hand_count;
-
-    if (selected >= hand_count) {
-        selected = hand_count - 1;
-    }
-
-    if (selected < 0) {
-        selected = 0;
-    }
-}
     }
 }

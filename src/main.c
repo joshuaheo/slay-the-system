@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include "type.h"
 #include "ui.h"
 #include "login.h"
