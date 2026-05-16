@@ -1,5 +1,6 @@
 #define _XOPEN_SOURCE 700
 #include <locale.h>
+#include <stdio.h>
 #include <ncurses.h>
 #include <string.h>
 #include <stdlib.h>
@@ -22,7 +23,16 @@ void init_ui(void) {
 }
 
 //ncurses종료함수
-void close_ui(void) {
+void close_ui(void)
+{
+    clear();
+    refresh();
+
+    echo();
+    nocbreak();
+    keypad(stdscr, FALSE);
+    curs_set(1);
+
     endwin();
 }
 
@@ -224,9 +234,16 @@ static void show_battle_result_message(BattleResult result)
         mvprintw(5, 5, "전투 패배...");
     }
 
-    mvprintw(7, 5, "아무 키나 누르면 전투를 종료합니다.");
+    if (result == BATTLE_WIN) {
+        mvprintw(7, 5, "아무 키나 누르면 보상 화면으로 이동합니다.");
+    } else if (result == BATTLE_LOSE) {
+        mvprintw(7, 5, "아무 키나 누르면 세이브를 삭제하고 종료합니다.");
+    }
+
     refresh();
     getch();
+    clear();
+    refresh();
 }
 
 //전투 보상 출력 메시지
@@ -461,6 +478,7 @@ BattleResult show_temp_battle_screen(GameState *state)
                 battle_result = check_battle_result(player, enemies, enemy_count);
 
                 if (battle_result != BATTLE_CONTINUE) {
+                    final_result = battle_result;
                     show_battle_result_message(battle_result);
                     break;
                 }
@@ -546,7 +564,7 @@ static void print_wrapped_text(int y, int x, const char *text, int width, int ma
     }
 }
 
-//전투 보상 출력 함수
+//전투 보상 화면 출력 함수
 void show_battle_reward_screen(GameState *state)
 {
     Card rewards[CARD_REWARD_COUNT];

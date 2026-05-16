@@ -96,3 +96,21 @@ int load_game(const char *username, GameState *state) {
     fclose(fp);
     return 1;
 }
+
+int delete_save_file(const char *username) {
+    char path[256];
+
+    if (!is_valid_username(username)) {
+        return 0;
+    }
+
+    if (!make_save_path(username, path, sizeof(path))) {
+        return 0;
+    }
+
+    if (remove(path) != 0) {
+        return 0;
+    }
+
+    return 1;
+}

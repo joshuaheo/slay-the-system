@@ -10,5 +10,6 @@ int make_save_path(const char *username, char *path, int size);
 int save_game(const GameState *state);
 int load_game(const char *username, GameState *state);
 int save_file_exists(const char *username);
+int delete_save_file(const char *username);
 
 #endif
