@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 #include "type.h"
 #include "ui.h"
 #include "login.h"
@@ -9,10 +10,12 @@
 #include "card.h"
 
 int main(void) {
+    srand((unsigned int)time(NULL) ^ (unsigned int)getpid());
     MenuChoice choice;
     char username[MAX_NAME_LEN];
     GameState state;
     int has_save;
+    BattleResult battle_result;
 
     init_ui();
 
@@ -47,9 +50,12 @@ int main(void) {
             }
         }
 
-        prepare_battle_deck(&state.player);
+       prepare_battle_deck(&state.player);
+       battle_result = show_temp_battle_screen(&state);
 
-        show_temp_battle_screen(&state);
+       if (battle_result == BATTLE_WIN) {
+        show_battle_reward_screen(&state);
+    }
         close_ui();
     } else if (choice == MENU_EXIT) {
         close_ui();

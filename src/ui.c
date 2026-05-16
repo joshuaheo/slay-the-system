@@ -8,6 +8,7 @@
 #include "ui.h"
 #include "card.h"
 #include "enemy.h"
+#include "reward.h"
 
 //ncurses 시작 함수
 void init_ui(void) {
@@ -198,17 +199,15 @@ void show_invalid_username_screen(void) {
     getch();
 }
 
-//전투화면 출력 함수
+//전투화면 부분
 
 //전투화면의 큰 구분선을 출력하는 함수
-
 static void print_battle_line(int y, int x, int width)
 {
     mvhline(y, x, '=', width);
 }
 
 //전투화면의 작은 구분선을 출력하는함수
-
 static void print_battle_dash(int y, int x, int width)
 {
     mvhline(y, x, '-', width);
@@ -230,11 +229,26 @@ static void show_battle_result_message(BattleResult result)
     getch();
 }
 
+//전투 보상 출력 메시지
+static void show_card_added_message(const Card *card)
+{
+    clear();
+
+    if (card != NULL) {
+        mvprintw(5, 5, "%s 카드를 덱에 추가했습니다.", card->name);
+    }
+
+    mvprintw(7, 5, "아무 키나 누르면 계속합니다.");
+    refresh();
+    getch();
+}
+
 //임시 전투화면 출력 함수
-void show_temp_battle_screen(GameState *state)
+BattleResult show_temp_battle_screen(GameState *state)
 {
     Player *player;
     const Card *selected_card;
+    BattleResult final_result = BATTLE_CONTINUE;
     BattleResult battle_result;
 
     Enemy enemies[1];
@@ -252,7 +266,7 @@ void show_temp_battle_screen(GameState *state)
     int i;
 
     if (state == NULL) {
-        return;
+        return BATTLE_CONTINUE;
     }
 
     player = &state->player;
@@ -408,6 +422,7 @@ void show_temp_battle_screen(GameState *state)
             } else if (play_card(player, enemies, enemy_count, selected, target_index)) {
                 battle_result = check_battle_result(player, enemies, enemy_count);
                 if (battle_result != BATTLE_CONTINUE) {    
+                    final_result = battle_result;
                     show_battle_result_message(battle_result);
                     break;
                 }
@@ -469,6 +484,164 @@ void show_temp_battle_screen(GameState *state)
                 }
             }
         } else if (ch == 'q' || ch == 'Q') {
+            final_result = BATTLE_CONTINUE;
+            break;
+        }
+    }
+    return final_result;
+}
+
+//카드 설명 줄바꿈 함수
+static void print_wrapped_text(int y, int x, const char *text, int width, int max_lines)
+{
+    char buffer[256];
+    char line[256];
+    char *word;
+    int current_y;
+    int printed_lines;
+    int line_len;
+
+    if (text == NULL || width <= 0 || max_lines <= 0) {
+        return;
+    }
+
+    strncpy(buffer, text, sizeof(buffer) - 1);
+    buffer[sizeof(buffer) - 1] = '\0';
+
+    line[0] = '\0';
+    current_y = y;
+    printed_lines = 0;
+    line_len = 0;
+
+    word = strtok(buffer, " ");
+
+    while (word != NULL && printed_lines < max_lines) {
+        int word_len;
+
+        word_len = strlen(word);
+
+        if (line_len == 0) {
+            strncpy(line, word, sizeof(line) - 1);
+            line[sizeof(line) - 1] = '\0';
+            line_len = word_len;
+        } else if (line_len + 1 + word_len <= width) {
+            strncat(line, " ", sizeof(line) - strlen(line) - 1);
+            strncat(line, word, sizeof(line) - strlen(line) - 1);
+            line_len += word_len + 1;
+        } else {
+            mvprintw(current_y, x, "%s", line);
+            current_y++;
+            printed_lines++;
+
+            strncpy(line, word, sizeof(line) - 1);
+            line[sizeof(line) - 1] = '\0';
+            line_len = word_len;
+        }
+
+        word = strtok(NULL, " ");
+    }
+
+    if (line_len > 0 && printed_lines < max_lines) {
+        mvprintw(current_y, x, "%s", line);
+    }
+}
+
+//전투 보상 출력 함수
+void show_battle_reward_screen(GameState *state)
+{
+    Card rewards[CARD_REWARD_COUNT];
+    Player *player;
+    int selected;
+    int ch;
+    int i;
+    int start_y;
+    int start_x;
+    int card_width;
+    int gold_reward;
+
+    if (state == NULL) {
+        return;
+    }
+
+    player = &state->player;
+    selected = 0;
+    card_width = 26;
+
+    gold_reward = generate_gold_reward(20, 30);
+    player->gold += gold_reward;
+
+    generate_card_rewards(rewards, CARD_REWARD_COUNT);
+
+    while (1) {
+        clear();
+
+        start_y = 2;
+        start_x = 4;
+
+        mvprintw(start_y, start_x, "전투 승리!");
+        mvprintw(start_y + 2, start_x, "획득 골드: %d", gold_reward);
+        mvprintw(start_y + 3, start_x, "현재 골드: %d", player->gold);
+
+        mvprintw(start_y + 5, start_x, "카드 보상을 선택하세요.");
+        mvprintw(start_y + 6, start_x, "←/→ 또는 A/D: 선택 이동");
+        mvprintw(start_y + 7, start_x, "Enter 또는 1/2/3: 선택");
+        mvprintw(start_y + 8, start_x, "S 또는 0: 카드 보상 넘기기");
+
+        for (i = 0; i < CARD_REWARD_COUNT; i++) {
+            int card_x;
+
+            card_x = start_x + i * 32;
+
+            if (i == selected) {
+                mvprintw(start_y + 11, card_x, ">");
+            } else {
+                mvprintw(start_y + 11, card_x, " ");
+            }
+
+            mvprintw(start_y + 11, card_x + 2, "[%d]", i + 1);
+            mvprintw(start_y + 12, card_x + 2, "%s", rewards[i].name);
+            mvprintw(start_y + 13, card_x + 2, "비용: %d", rewards[i].cost);
+
+            print_wrapped_text(start_y + 15,
+                               card_x + 2,
+                               rewards[i].description,
+                               card_width,
+                               4);
+        }
+
+        refresh();
+
+        ch = getch();
+
+        if (ch == KEY_LEFT || ch == 'a' || ch == 'A') {
+            selected--;
+
+            if (selected < 0) {
+                selected = CARD_REWARD_COUNT - 1;
+            }
+        } else if (ch == KEY_RIGHT || ch == 'd' || ch == 'D') {
+            selected++;
+
+            if (selected >= CARD_REWARD_COUNT) {
+                selected = 0;
+            }
+        } else if (ch == '\n' || ch == KEY_ENTER) {
+            add_card_to_deck(player, rewards[selected]);
+            show_card_added_message(&rewards[selected]);
+            break;
+        } else if (ch == '1') {
+            add_card_to_deck(player, rewards[0]);
+            show_card_added_message(&rewards[0]);
+            break;
+        } else if (ch == '2') {
+            add_card_to_deck(player, rewards[1]);
+            show_card_added_message(&rewards[1]);
+            break;
+        } else if (ch == '3') {
+            add_card_to_deck(player, rewards[2]);
+            show_card_added_message(&rewards[2]);
+            break;
+        } else if (ch == 's' || ch == 'S' || ch == '0') {
             break;
         }
     }
