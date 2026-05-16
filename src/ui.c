@@ -7,6 +7,7 @@
 #include "battle.h"
 #include "ui.h"
 #include "card.h"
+#include "enemy.h"
 
 //ncurses 시작 함수
 void init_ui(void) {
@@ -213,25 +214,6 @@ static void print_battle_dash(int y, int x, int width)
     mvhline(y, x, '-', width);
 }
 
-//임시 적(슬라임)
-
-static void init_temp_enemy(Enemy *enemy)
-{
-    if (enemy == NULL) {
-        return;
-    }
-
-    strncpy(enemy->name, "Slime", MAX_NAME_LEN - 1);
-    enemy->name[MAX_NAME_LEN - 1] = '\0';
-
-    enemy->max_hp = 30;
-    enemy->hp = 30;
-    enemy->block = 0;
-    enemy->strength = 0;
-    enemy->weak = 0;
-    enemy->vulnerable = 0;
-}
-
 //임시 전투화면 출력 함수
 
 void show_temp_battle_screen(GameState *state)
@@ -259,7 +241,7 @@ void show_temp_battle_screen(GameState *state)
 
     player = &state->player;
 
-    init_temp_enemy(&enemies[0]);
+    init_slime(&enemies[0]);
 
     while (1) {
         int start_y = (LINES - battle_height) / 3;
@@ -447,9 +429,10 @@ void show_temp_battle_screen(GameState *state)
                 getch();
             } else {
                 discard_hand(player);
+                enemies_take_turn(enemies,enemy_count,player);
+                decrease_turn_statuses(player,enemies,enemy_count);
 
                 player->block = 0;
-                decrease_turn_statuses(player, enemies, enemy_count);
                 player->energy = player->max_energy;
 
                 draw_cards(player, 5);
