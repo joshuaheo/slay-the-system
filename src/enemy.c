@@ -2,6 +2,7 @@
 
 #include "enemy.h"
 
+//슬라임 생성 함수
 void init_slime(Enemy *enemy)
 {
     if (enemy == NULL) {
@@ -22,6 +23,7 @@ void init_slime(Enemy *enemy)
     enemy->damage = 6;
 }
 
+//적이 살아있는지 확인하는 함수
 int is_enemy_alive(const Enemy *enemy)
 {
     if (enemy == NULL) {
@@ -31,6 +33,7 @@ int is_enemy_alive(const Enemy *enemy)
     return enemy->hp > 0;
 }
 
+//적의 공격 최종데미지 계산함수
 int calculate_enemy_attack_damage(const Enemy *enemy, const Player *player)
 {
     int damage;
@@ -64,6 +67,7 @@ int calculate_enemy_attack_damage(const Enemy *enemy, const Player *player)
     return damage;
 }
 
+//적이 플레이어를 공격하는 함수
 void enemy_attack_player(Enemy *enemy, Player *player)
 {
     int damage;
@@ -99,6 +103,7 @@ void enemy_attack_player(Enemy *enemy, Player *player)
     }
 }
 
+//임시 적의 패턴 함수
 void enemies_take_turn(Enemy enemies[], int enemy_count, Player *player)
 {
     int i;

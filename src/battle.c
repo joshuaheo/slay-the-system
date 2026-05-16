@@ -442,3 +442,39 @@ int play_card(Player *player, Enemy enemies[], int enemy_count, int hand_index, 
 
     return 1;
 }
+
+//적이 모두 죽었는지 확인하는 함수
+int are_all_enemies_dead(Enemy enemies[], int enemy_count)
+{
+    int i;
+
+    if (enemies == NULL || enemy_count <= 0) {
+        return 1;
+    }
+
+    for (i = 0; i < enemy_count; i++) {
+        if (enemies[i].hp > 0) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+//배틀 결과를 판정하는 함수
+BattleResult check_battle_result(Player *player, Enemy enemies[], int enemy_count)
+{
+    if (player == NULL) {
+        return BATTLE_LOSE;
+    }
+
+    if (player->hp <= 0) {
+        return BATTLE_LOSE;
+    }
+
+    if (are_all_enemies_dead(enemies, enemy_count)) {
+        return BATTLE_WIN;
+    }
+
+    return BATTLE_CONTINUE;
+}

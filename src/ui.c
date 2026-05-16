@@ -214,12 +214,28 @@ static void print_battle_dash(int y, int x, int width)
     mvhline(y, x, '-', width);
 }
 
-//임시 전투화면 출력 함수
+//전투 결과 메시지 출력함수
+static void show_battle_result_message(BattleResult result)
+{
+    clear();
 
+    if (result == BATTLE_WIN) {
+        mvprintw(5, 5, "전투 승리!");
+    } else if (result == BATTLE_LOSE) {
+        mvprintw(5, 5, "전투 패배...");
+    }
+
+    mvprintw(7, 5, "아무 키나 누르면 전투를 종료합니다.");
+    refresh();
+    getch();
+}
+
+//임시 전투화면 출력 함수
 void show_temp_battle_screen(GameState *state)
 {
     Player *player;
     const Card *selected_card;
+    BattleResult battle_result;
 
     Enemy enemies[1];
     int enemy_count = 1;
@@ -350,15 +366,6 @@ void show_temp_battle_screen(GameState *state)
                 attroff(A_REVERSE);
             }
         }
-
-        if (enemies[0].hp <= 0) {
-            mvprintw(start_y + 24, start_x,
-                     "적을 처치했습니다. Q를 눌러 임시 전투를 종료하세요.");
-        } else if (player->hp <= 0) {
-            mvprintw(start_y + 24, start_x,
-                     "플레이어가 쓰러졌습니다. Q를 눌러 임시 전투를 종료하세요.");
-        }
-
         mvprintw(start_y + 25, start_x,
                  "← → 선택   A/D 선택   Enter 사용   E 턴 종료   Q 종료");
 
@@ -399,6 +406,11 @@ void show_temp_battle_screen(GameState *state)
                 refresh();
                 getch();
             } else if (play_card(player, enemies, enemy_count, selected, target_index)) {
+                battle_result = check_battle_result(player, enemies, enemy_count);
+                if (battle_result != BATTLE_CONTINUE) {    
+                    show_battle_result_message(battle_result);
+                    break;
+                }
                 hand_count = player->hand_count;
 
                 if (hand_count > max_display_hand) {
@@ -410,7 +422,8 @@ void show_temp_battle_screen(GameState *state)
                 } else if (selected >= hand_count) {
                     selected = hand_count - 1;
                 }
-            } else {
+            } 
+            else {
                 mvprintw(start_y + 27, start_x,
                          "카드를 사용할 수 없습니다. 에너지 또는 대상 상태를 확인하세요.");
                 refresh();
@@ -430,6 +443,12 @@ void show_temp_battle_screen(GameState *state)
             } else {
                 discard_hand(player);
                 enemies_take_turn(enemies,enemy_count,player);
+                battle_result = check_battle_result(player, enemies, enemy_count);
+
+                if (battle_result != BATTLE_CONTINUE) {
+                    show_battle_result_message(battle_result);
+                    break;
+                }
                 decrease_turn_statuses(player,enemies,enemy_count);
 
                 player->block = 0;
