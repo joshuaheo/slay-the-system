@@ -210,7 +210,7 @@ void show_invalid_username_screen(void) {
     getch();
 }
 
-//전투화면 부분
+//전투 부분 ui 함수
 
 //전투화면의 큰 구분선을 출력하는 함수
 static void print_battle_line(int y, int x, int width)
@@ -674,6 +674,233 @@ void show_current_stage_screen(int floor, StageType stage)
     mvprintw(5, 5, "현재 층: %d층", floor);
     mvprintw(7, 5, "스테이지: %s", get_stage_type_name(stage));
     mvprintw(9, 5, "아무 키나 누르면 진행합니다.");
+
+    refresh();
+    getch();
+
+    clear();
+    refresh();
+}
+
+//휴식 부분 화면 출력 함수
+
+//휴식 선택화면 출력 함수
+int show_rest_choice_screen(const Player *player)
+{
+    int selected = 0;
+    int ch;
+
+    while (1) {
+        clear();
+
+        mvprintw(3, 5, "휴식 장소");
+        mvprintw(5, 5, "현재 체력: %d / %d", player->hp, player->max_hp);
+        mvprintw(6, 5, "현재 덱 카드 수: %d", player->owned_deck_count);
+
+        if (selected == 0) {
+            attron(A_REVERSE);
+        }
+        mvprintw(9, 5, "1. 휴식하기 - 최대 체력의 30%% 회복");
+        if (selected == 0) {
+            attroff(A_REVERSE);
+        }
+
+        if (selected == 1) {
+            attron(A_REVERSE);
+        }
+        mvprintw(11, 5, "2. 카드 제거하기 - 덱에서 카드 1장 제거");
+        if (selected == 1) {
+            attroff(A_REVERSE);
+        }
+
+        mvprintw(14, 5, "W/S 또는 방향키로 이동, Enter로 선택");
+        refresh();
+
+        ch = getch();
+
+        if (ch == KEY_UP || ch == 'w' || ch == 'W') {
+            selected--;
+            if (selected < 0) {
+                selected = 1;
+            }
+        } else if (ch == KEY_DOWN || ch == 's' || ch == 'S') {
+            selected++;
+            if (selected > 1) {
+                selected = 0;
+            }
+        } else if (ch == '\n' || ch == KEY_ENTER || ch == 10 || ch == 13) {
+            return selected + 1;
+        } else if (ch == '1') {
+            return 1;
+        } else if (ch == '2') {
+            return 2;
+        }
+    }
+}
+
+//덱 카드 제거 선택시 나오는 화면 함수
+int show_remove_card_screen(const Player *player)
+{
+    int selected;
+    int page;
+    int cards_per_page;
+    int total_pages;
+    int start_index;
+    int end_index;
+    int i;
+    int ch;
+    int rows;
+    int cols;
+    int desc_width;
+
+    if (player == NULL || player->owned_deck_count <= 0) {
+        return -1;
+    }
+
+    selected = 0;
+    page = 0;
+    cards_per_page = 10;
+
+    total_pages = (player->owned_deck_count + cards_per_page - 1) / cards_per_page;
+
+    while (1) {
+        getmaxyx(stdscr, rows, cols);
+
+        desc_width = cols - 10;
+        if (desc_width < 20) {
+            desc_width = 20;
+        }
+
+        start_index = page * cards_per_page;
+        end_index = start_index + cards_per_page;
+
+        if (end_index > player->owned_deck_count) {
+            end_index = player->owned_deck_count;
+        }
+
+        if (selected < start_index) {
+            selected = start_index;
+        }
+
+        if (selected >= end_index) {
+            selected = end_index - 1;
+        }
+
+        clear();
+
+        mvprintw(2, 5, "제거할 카드를 선택하세요.");
+        mvprintw(3, 5, "덱 카드 수: %d", player->owned_deck_count);
+        mvprintw(4, 5, "페이지: %d / %d", page + 1, total_pages);
+        mvprintw(5, 5, "W/S 또는 ↑/↓ 이동, A/D 또는 ←/→ 페이지 이동, Enter 선택, Q 취소");
+
+        for (i = start_index; i < end_index; i++) {
+            int line_y;
+
+            line_y = 7 + (i - start_index);
+
+            if (i == selected) {
+                attron(A_REVERSE);
+            }
+
+            mvprintw(line_y, 5, "%2d. [%d] %s",
+                     i + 1,
+                     player->owned_deck[i].cost,
+                     player->owned_deck[i].name);
+
+            if (i == selected) {
+                attroff(A_REVERSE);
+            }
+        }
+
+        mvprintw(rows - 5, 5, "선택 카드 설명:");
+        print_wrapped_text(rows - 4, 5,
+                           player->owned_deck[selected].description,
+                           desc_width,
+                           3);
+
+        refresh();
+
+        ch = getch();
+
+        if (ch == KEY_UP || ch == 'w' || ch == 'W') {
+            selected--;
+
+            if (selected < start_index) {
+                selected = end_index - 1;
+            }
+        } else if (ch == KEY_DOWN || ch == 's' || ch == 'S') {
+            selected++;
+
+            if (selected >= end_index) {
+                selected = start_index;
+            }
+        } else if (ch == KEY_LEFT || ch == 'a' || ch == 'A') {
+            if (page > 0) {
+                page--;
+                selected = page * cards_per_page;
+            }
+        } else if (ch == KEY_RIGHT || ch == 'd' || ch == 'D') {
+            if (page < total_pages - 1) {
+                page++;
+                selected = page * cards_per_page;
+            }
+        } else if (ch == '\n' || ch == KEY_ENTER || ch == 10 || ch == 13) {
+            return selected;
+        } else if (ch == 'q' || ch == 'Q') {
+            return -1;
+        }
+    }
+}
+
+//회복 결과 화면 출력 함수
+void show_rest_result_screen(int healed, const Player *player)
+{
+    clear();
+
+    mvprintw(5, 5, "휴식을 취했습니다.");
+    mvprintw(7, 5, "체력을 %d 회복했습니다.", healed);
+
+    if (player != NULL) {
+        mvprintw(9, 5, "현재 체력: %d / %d", player->hp, player->max_hp);
+    }
+
+    mvprintw(12, 5, "아무 키나 누르면 다음 층으로 이동합니다.");
+
+    refresh();
+    getch();
+
+    clear();
+    refresh();
+}
+
+//카드 제거 화면 출력 함수
+void show_card_removed_screen(const Card *card)
+{
+    clear();
+
+    if (card != NULL) {
+        mvprintw(5, 5, "%s 카드를 덱에서 제거했습니다.", card->name);
+    } else {
+        mvprintw(5, 5, "카드를 제거했습니다.");
+    }
+
+    mvprintw(7, 5, "아무 키나 누르면 다음 층으로 이동합니다.");
+
+    refresh();
+    getch();
+
+    clear();
+    refresh();
+}
+
+//카드 제거 불가능시 출력 함수
+void show_card_remove_unavailable_screen(void)
+{
+    clear();
+
+    mvprintw(5, 5, "카드를 제거할 수 없습니다.");
+    mvprintw(7, 5, "덱에 카드가 10장 이하이면 제거할 수 없습니다.");
+    mvprintw(9, 5, "아무 키나 누르면 휴식 선택으로 돌아갑니다.");
 
     refresh();
     getch();

@@ -4,6 +4,9 @@
 #include "ui.h"
 #include "save.h"
 #include "map.h"
+#include "player.h"
+
+static int run_rest_stage(GameState *state);
 
 // Player에 대한 정보를 게임 시작 상태로 초기화하는 함수
 void init_new_game(GameState *state, const char *username) {
@@ -157,6 +160,7 @@ int run_current_stage(GameState *state) {
         return 0;
 
     case STAGE_REST:
+        return run_rest_stage(state);
     case STAGE_SHOP:
     case STAGE_CHEST:
     case STAGE_EVENT:
@@ -170,5 +174,70 @@ int run_current_stage(GameState *state) {
 
     default:
         return 0;
+    }
+}
+
+//휴식 스테이지 실행하는 함수
+static int run_rest_stage(GameState *state)
+{
+    int choice;
+    int heal_amount;
+    int healed;
+    int remove_index;
+    Card removed_card;
+
+    if (state == NULL) {
+        return 0;
+    }
+
+    while (1) {
+        choice = show_rest_choice_screen(&state->player);
+
+        if (choice == 1) {
+            heal_amount = state->player.max_hp * 30 / 100;
+            if (heal_amount <= 0) {
+                heal_amount = 1;
+            }
+
+            healed = heal_player(&state->player, heal_amount);
+            show_rest_result_screen(healed, &state->player);
+
+            state->floor++;
+
+            if (!save_game(state)) {
+                return 0;
+            }
+
+            return 1;
+        }
+
+        if (choice == 2) {
+            if (!can_remove_card_from_deck(&state->player)) {
+                show_card_remove_unavailable_screen();
+                continue;
+            }
+
+            remove_index = show_remove_card_screen(&state->player);
+
+            if (remove_index < 0) {
+                continue;
+            }
+
+            removed_card = state->player.owned_deck[remove_index];
+
+            if (!remove_card_from_deck(&state->player, remove_index)) {
+                return 0;
+            }
+
+            show_card_removed_screen(&removed_card);
+
+            state->floor++;
+
+            if (!save_game(state)) {
+                return 0;
+            }
+
+            return 1;
+        }
     }
 }
