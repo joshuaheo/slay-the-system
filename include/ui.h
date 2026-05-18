@@ -16,4 +16,5 @@ void show_invalid_username_screen(void);
 
 BattleResult show_temp_battle_screen(GameState *state);
 void show_battle_reward_screen(GameState *state);
+void show_current_stage_screen(int floor, StageType stage);
 #endif

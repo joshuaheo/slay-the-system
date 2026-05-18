@@ -97,6 +97,7 @@ int load_game(const char *username, GameState *state) {
     return 1;
 }
 
+//세이브 파일을 지우는 함수
 int delete_save_file(const char *username) {
     char path[256];
 

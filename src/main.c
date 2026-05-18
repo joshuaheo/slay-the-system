@@ -7,14 +7,12 @@
 #include "login.h"
 #include "save.h"
 #include "game.h"
-#include "card.h"
 
 int main(void) {
     MenuChoice choice;
     char username[MAX_NAME_LEN];
     GameState state;
     int has_save;
-    BattleResult battle_result;
 
     srand((unsigned int)time(NULL) ^ (unsigned int)getpid());
 
@@ -56,13 +54,10 @@ int main(void) {
                 }
             }
 
-            prepare_battle_deck(&state.player);
-            battle_result = show_temp_battle_screen(&state);
-
-            if (!handle_battle_result(&state, battle_result)) {
-                close_ui();
-                printf("전투 결과 처리 실패\n");
-                return 1;
+            while (state.floor <= MAX_FLOOR) {
+                if (!run_current_stage(&state)) {
+                    break;
+                }
             }
         }
     }

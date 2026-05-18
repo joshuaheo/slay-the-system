@@ -10,6 +10,7 @@
 #include "card.h"
 #include "enemy.h"
 #include "reward.h"
+#include "map.h"
 
 //ncurses 시작 함수
 void init_ui(void) {
@@ -663,4 +664,20 @@ void show_battle_reward_screen(GameState *state)
             break;
         }
     }
+}
+
+//임시 스테이지 현황 출력 함수
+void show_current_stage_screen(int floor, StageType stage)
+{
+    clear();
+
+    mvprintw(5, 5, "현재 층: %d층", floor);
+    mvprintw(7, 5, "스테이지: %s", get_stage_type_name(stage));
+    mvprintw(9, 5, "아무 키나 누르면 진행합니다.");
+
+    refresh();
+    getch();
+
+    clear();
+    refresh();
 }
