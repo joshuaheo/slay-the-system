@@ -140,6 +140,12 @@ int run_current_stage(GameState *state) {
         battle_result = show_temp_battle_screen(state);
 
         if (battle_result == BATTLE_WIN) {
+            if (stage == STAGE_BOSS || state->floor == MAX_FLOOR) {
+                cleanup_after_battle(&state->player);
+                delete_save_file(state->username);
+                return 0;
+            }
+
             return handle_battle_win(state);
         }
 
