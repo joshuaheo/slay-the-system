@@ -9,6 +9,7 @@
 #include "ui.h"
 #include "card.h"
 #include "enemy.h"
+#include "relic.h"
 #include "reward.h"
 #include "map.h"
 
@@ -290,6 +291,8 @@ BattleResult show_temp_battle_screen(GameState *state)
     player = &state->player;
 
     init_slime(&enemies[0]);
+
+    apply_relics_on_battle_start(player);
 
     while (1) {
         int start_y = (LINES - battle_height) / 3;
@@ -909,6 +912,7 @@ void show_card_remove_unavailable_screen(void)
     refresh();
 }
 
+//유물을 얻었을때 나오는 화면
 void show_relic_obtained_screen(const char *title, const Relic *relic)
 {
     int rows;
@@ -940,6 +944,7 @@ void show_relic_obtained_screen(const char *title, const Relic *relic)
     getch();
 }
 
+//획득가능한 유물이 없을때 나오는 화면
 void show_no_relic_available_screen(void)
 {
     int rows;

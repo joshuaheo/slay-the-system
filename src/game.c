@@ -78,6 +78,7 @@ int handle_battle_win(GameState *state) {
     if (state == NULL) {
         return 0;
     }
+    apply_relics_on_battle_win(&state->player);
 
     show_battle_reward_screen(state);
 

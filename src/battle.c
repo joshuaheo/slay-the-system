@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "battle.h"
 #include "card.h"
+#include "relic.h"
 
 //카드가 몇 번 공격하는지 계산하는 함수.
 static int get_card_hit_count(const Card *card)

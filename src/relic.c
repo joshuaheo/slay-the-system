@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+#include "player.h"
 #include "relic.h"
 
 //유물 목록
@@ -42,7 +43,7 @@ static const Relic relic_pool[] = {
     }
 };
 
-//유물 희귀도 
+//드랍율에 적용받는 희귀도인지 확인하는 함수
 static int is_standard_relic_rarity(RelicRarity rarity)
 {
     return rarity == RELIC_COMMON ||
@@ -50,7 +51,7 @@ static int is_standard_relic_rarity(RelicRarity rarity)
            rarity == RELIC_RARE;
 }
 
-//희귀도별 드랍율 설정
+//희귀도별 드랍율 설정해주는 함수
 static RelicRarity choose_standard_relic_rarity(void)
 {
     int roll = rand() % 100;
@@ -66,7 +67,7 @@ static RelicRarity choose_standard_relic_rarity(void)
     return RELIC_RARE;
 }
 
-//유물 적용 함수
+//획득 즉시 발동하는 유물 효과를 적용하는 함수
 static void apply_relic_on_obtain(Player *player, Relic relic)
 {
     if (player == NULL) {
@@ -96,13 +97,13 @@ static void apply_relic_on_obtain(Player *player, Relic relic)
     }
 }
 
-
+// 전체 유물 풀에 등록된 유물 개수를 반환하는 함수
 int get_relic_pool_count(void)
 {
     return (int)(sizeof(relic_pool) / sizeof(relic_pool[0]));
 }
 
-
+// 유물 풀에서 index에 해당하는 유물을 반환하는 함수
 Relic get_relic_from_pool(int index)
 {
     int count = get_relic_pool_count();
@@ -114,6 +115,7 @@ Relic get_relic_from_pool(int index)
     return relic_pool[index];
 }
 
+//플레이어가 해당 유물을 가지고 있는지 확인하는 함수
 int has_relic(const Player *player, RelicId id)
 {
     int i;
@@ -131,6 +133,7 @@ int has_relic(const Player *player, RelicId id)
     return 0;
 }
 
+//플레이어에게 유물을 추가하는 함수
 int add_relic_to_player(Player *player, Relic relic)
 {
     if (player == NULL) {
@@ -157,11 +160,8 @@ int add_relic_to_player(Player *player, Relic relic)
     return 1;
 }
 
-int get_random_available_relic_by_rarity(
-    const Player *player,
-    RelicRarity rarity,
-    Relic *out_relic
-)
+//특정 희귀도에서 플레이어가 아직 가지지 않은 유물을 랜덤으로 선택하는 함수
+int get_random_available_relic_by_rarity(const Player *player, RelicRarity rarity, Relic *out_relic)
 {
     int candidates[RELIC_COUNT];
     int candidate_count = 0;
@@ -191,10 +191,8 @@ int get_random_available_relic_by_rarity(
     return 1;
 }
 
-int get_random_available_standard_relic(
-    const Player *player,
-    Relic *out_relic
-)
+// 표준 드랍풀에서 플레이어가 아직 가지지 않은 유물을 랜덤으로 선택하는 함수
+int get_random_available_standard_relic(const Player *player, Relic *out_relic)
 {
     int candidates[RELIC_COUNT];
     int candidate_count = 0;
@@ -224,6 +222,7 @@ int get_random_available_standard_relic(
     return 1;
 }
 
+// 표준 드랍풀에서 랜덤 유물을 선택해 플레이어에게 지급합니다.
 int grant_random_standard_relic(Player *player, Relic *out_relic)
 {
     RelicRarity rarity;
@@ -248,4 +247,32 @@ int grant_random_standard_relic(Player *player, Relic *out_relic)
     *out_relic = relic;
 
     return 1;
+}
+
+// 전투 시작 시 발동하는 유물 효과를 적용합니다.
+void apply_relics_on_battle_start(Player *player)
+{
+    if (player == NULL) {
+        return;
+    }
+
+    if (has_relic(player, RELIC_ANCHOR)) {
+        player->block += 10;
+    }
+
+    if (has_relic(player, RELIC_VAJRA)) {
+        player->strength += 1;
+    }
+}
+
+// 전투 승리 시 발동하는 유물 효과를 적용합니다.
+void apply_relics_on_battle_win(Player *player)
+{
+    if (player == NULL) {
+        return;
+    }
+
+    if (has_relic(player, RELIC_BURNING_BLOOD)) {
+        heal_player(player, 6);
+    }
 }
