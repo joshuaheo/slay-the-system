@@ -68,12 +68,31 @@ typedef struct {
 
 //유물 효과 구분
 typedef enum {
-    RELIC_NONE
-} RelicId;
+    RELIC_NONE,
+    RELIC_BURNING_BLOOD,
+    RELIC_ANCHOR,
+    RELIC_VAJRA,
+    RELIC_PEAR,
+    RELIC_OLD_COIN,
+    RELIC_LEES_WAFFLE,
+
+    RELIC_COUNT
+ } RelicId;
+
+//유물 희귀도 구분
+ typedef enum {
+    RELIC_STARTER,
+    RELIC_COMMON,
+    RELIC_UNCOMMON,
+    RELIC_RARE,
+    RELIC_SHOP,
+    RELIC_EVENT
+} RelicRarity;
 
 //유물 설명 및 이름
 typedef struct {
     RelicId id;
+    RelicRarity rarity;
     char name[MAX_NAME_LEN];
     char description[128];
 } Relic;

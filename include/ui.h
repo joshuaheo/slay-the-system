@@ -23,4 +23,7 @@ int show_remove_card_screen(const Player *player);
 void show_rest_result_screen(int healed, const Player *player);
 void show_card_removed_screen(const Card *card);
 void show_card_remove_unavailable_screen(void);
+
+void show_relic_obtained_screen(const char *title, const Relic *relic);
+void show_no_relic_available_screen(void);
 #endif

@@ -4,8 +4,10 @@
 #include "ui.h"
 #include "save.h"
 #include "map.h"
+#include "relic.h"
 #include "player.h"
 
+static int run_chest_stage(GameState *state);
 static int run_rest_stage(GameState *state);
 
 // Player에 대한 정보를 게임 시작 상태로 초기화하는 함수
@@ -163,6 +165,7 @@ int run_current_stage(GameState *state) {
         return run_rest_stage(state);
     case STAGE_SHOP:
     case STAGE_CHEST:
+        return run_chest_stage(state);
     case STAGE_EVENT:
         state->floor++;
 
@@ -240,4 +243,25 @@ static int run_rest_stage(GameState *state)
             return 1;
         }
     }
+}
+
+//보물 스테이지 실행하는 함수
+static int run_chest_stage(GameState *state)
+{
+    Relic relic;
+
+    if (state == NULL) {
+        return 0;
+    }
+
+    if (grant_random_standard_relic(&state->player, &relic)) {
+        show_relic_obtained_screen("보물 상자", &relic);
+    } else {
+        show_no_relic_available_screen();
+    }
+
+    state->floor++;
+    save_game(state);
+
+    return 1;
 }

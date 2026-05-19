@@ -908,3 +908,50 @@ void show_card_remove_unavailable_screen(void)
     clear();
     refresh();
 }
+
+void show_relic_obtained_screen(const char *title, const Relic *relic)
+{
+    int rows;
+    int cols;
+    const char *screen_title;
+    int desc_x;
+
+    if (relic == NULL) {
+        return;
+    }
+
+    getmaxyx(stdscr, rows, cols);
+
+    screen_title = title != NULL ? title : "유물 획득";
+    desc_x = (cols - (int)strlen(relic->description)) / 2;
+    if (desc_x < 0) {
+        desc_x = 0;
+    }
+
+    clear();
+
+    mvprintw(rows / 2 - 5, (cols - (int)strlen(screen_title)) / 2, "%s", screen_title);
+    mvprintw(rows / 2 - 3, (cols - 24) / 2, "새로운 유물을 얻었습니다!");
+    mvprintw(rows / 2 - 1, (cols - (int)strlen(relic->name) - 4) / 2, "[ %s ]", relic->name);
+    mvprintw(rows / 2 + 1, desc_x, "%s", relic->description);
+    mvprintw(rows / 2 + 4, (cols - 30) / 2, "아무 키나 누르면 진행합니다.");
+
+    refresh();
+    getch();
+}
+
+void show_no_relic_available_screen(void)
+{
+    int rows;
+    int cols;
+
+    getmaxyx(stdscr, rows, cols);
+
+    clear();
+
+    mvprintw(rows / 2 - 2, (cols - 28) / 2, "획득 가능한 유물이 없습니다.");
+    mvprintw(rows / 2, (cols - 30) / 2, "아무 키나 누르면 진행합니다.");
+
+    refresh();
+    getch();
+}
