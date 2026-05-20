@@ -360,23 +360,6 @@ void generate_shop(const Player *player, Shop *shop)
     add_remove_card_item(shop);
 }
 
-//플레이어 덱에 카드 추가 함수
-static int add_card_to_player_deck(Player *player, Card card)
-{
-    if (player == NULL) {
-        return 0;
-    }
-
-    if (player->owned_deck_count >= MAX_DECK_SIZE) {
-        return 0;
-    }
-
-    player->owned_deck[player->owned_deck_count] = card;
-    player->owned_deck_count++;
-
-    return 1;
-}
-
 //상점 아이템을 사는 함수
 ShopBuyResult buy_shop_item(Player *player, ShopItem *item)
 {
@@ -400,7 +383,7 @@ ShopBuyResult buy_shop_item(Player *player, ShopItem *item)
 
         player->gold -= item->price;
 
-        if (!add_card_to_player_deck(player, item->card)) {
+        if (!add_card_to_deck(player, item->card)) {
             return SHOP_BUY_DECK_FULL;
         }
 
