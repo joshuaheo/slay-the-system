@@ -978,6 +978,7 @@ void show_no_relic_available_screen(void)
     getch();
 }
 
+//상점 선택 결과 메시지 출력 함수
 static const char *shop_buy_result_message(ShopBuyResult result)
 {
     switch (result) {
@@ -1000,6 +1001,7 @@ static const char *shop_buy_result_message(ShopBuyResult result)
     }
 }
 
+//상점 아이템 상황(품절,할인,가격)출력 함수
 static void print_shop_item_line(int y, int x, int selected, int index, const ShopItem *item)
 {
     const char *cursor;
@@ -1054,6 +1056,7 @@ static void print_shop_item_line(int y, int x, int selected, int index, const Sh
     }
 }
 
+//상점 아이템 설명 출력 함수
 static void print_shop_item_description(int y, int x, const ShopItem *item)
 {
     if (item == NULL || !item->available) {
@@ -1082,6 +1085,7 @@ static void print_shop_item_description(int y, int x, const ShopItem *item)
     }
 }
 
+//상점 화면 출력 함수
 int show_shop_screen(GameState *state, Shop *shop)
 {
     int selected = 0;

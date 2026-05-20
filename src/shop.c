@@ -5,11 +5,13 @@
 #include "card.h"
 #include "relic.h"
 
+//랜덤 숫자 출력 함수
 static int rand_between(int min, int max)
 {
     return min + rand() % (max - min + 1);
 }
 
+//희귀도에 따른 카드 가격 선정 함수
 static int get_card_price(CardRarity rarity)
 {
     switch (rarity) {
@@ -25,6 +27,7 @@ static int get_card_price(CardRarity rarity)
     }
 }
 
+//희귀도에 따른 유물 가격 선정 함수
 static int get_relic_price(RelicRarity rarity)
 {
     switch (rarity) {
@@ -41,6 +44,7 @@ static int get_relic_price(RelicRarity rarity)
     }
 }
 
+//드랍 유물인지 판정하는 함수
 static int is_drop_relic_rarity(RelicRarity rarity)
 {
     return rarity == RELIC_COMMON ||
@@ -48,11 +52,13 @@ static int is_drop_relic_rarity(RelicRarity rarity)
            rarity == RELIC_RARE;
 }
 
+//상점 유물인지 판정하는 함수
 static int is_shop_relic_rarity(RelicRarity rarity)
 {
     return rarity == RELIC_SHOP;
 }
 
+//중복 유물인지 판정하는 함수
 static int shop_has_relic(const Shop *shop, RelicId id)
 {
     int i;
@@ -72,6 +78,7 @@ static int shop_has_relic(const Shop *shop, RelicId id)
     return 0;
 }
 
+//타입에 따른 랜덤카드를 가져오는 함수
 static int get_random_card_by_type(CardType type, Card *out_card)
 {
     int candidates[256];
@@ -103,12 +110,8 @@ static int get_random_card_by_type(CardType type, Card *out_card)
     return 1;
 }
 
-static int get_random_relic_by_filter(
-    const Player *player,
-    const Shop *shop,
-    int (*filter)(RelicRarity),
-    Relic *out_relic
-)
+//상점유물인지 드랍유물인지에 따른 랜던 유물을 가져오는 함수
+static int get_random_relic_by_filter(const Player *player, const Shop *shop, int (*filter)(RelicRarity), Relic *out_relic)
 {
     int candidates[256];
     int candidate_count = 0;
@@ -141,6 +144,7 @@ static int get_random_relic_by_filter(
     return 1;
 }
 
+//상점 아이템 설정 함수
 static void init_shop_item(ShopItem *item)
 {
     if (item == NULL) {
@@ -156,6 +160,7 @@ static void init_shop_item(ShopItem *item)
     item->discounted = 0;
 }
 
+//카드 상품 추가 함수
 static void add_card_item(Shop *shop, Card card)
 {
     ShopItem *item;
@@ -179,6 +184,7 @@ static void add_card_item(Shop *shop, Card card)
     shop->item_count++;
 }
 
+//유물 상품 추가 함수
 static void add_relic_item(Shop *shop, Relic relic)
 {
     ShopItem *item;
@@ -202,6 +208,7 @@ static void add_relic_item(Shop *shop, Relic relic)
     shop->item_count++;
 }
 
+//카드 제거 상품 추가 함수
 static void add_remove_card_item(Shop *shop)
 {
     ShopItem *item;
@@ -221,6 +228,7 @@ static void add_remove_card_item(Shop *shop)
     shop->item_count++;
 }
 
+//카드에 할인을 적용하는 함수
 static void apply_card_discounts(Shop *shop)
 {
     int card_indices[SHOP_CARD_COUNT];
@@ -264,6 +272,7 @@ static void apply_card_discounts(Shop *shop)
     item->price = item->original_price / 2;
 }
 
+//유물에 할인을 적용하는 함수
 static void apply_relic_discount(Shop *shop)
 {
     int relic_indices[SHOP_RELIC_COUNT];
@@ -294,6 +303,7 @@ static void apply_relic_discount(Shop *shop)
     item->price = item->original_price / 2;
 }
 
+//상점 전체 함수
 void generate_shop(const Player *player, Shop *shop)
 {
     Card card;
@@ -350,6 +360,7 @@ void generate_shop(const Player *player, Shop *shop)
     add_remove_card_item(shop);
 }
 
+//플레이어 덱에 카드 추가 함수
 static int add_card_to_player_deck(Player *player, Card card)
 {
     if (player == NULL) {
@@ -366,6 +377,7 @@ static int add_card_to_player_deck(Player *player, Card card)
     return 1;
 }
 
+//상점 아이템을 사는 함수
 ShopBuyResult buy_shop_item(Player *player, ShopItem *item)
 {
     if (player == NULL || item == NULL || !item->available) {
@@ -417,6 +429,7 @@ ShopBuyResult buy_shop_item(Player *player, ShopItem *item)
     }
 }
 
+//카드 제거를 구매한 경우 작동하는 함수
 ShopBuyResult buy_shop_remove_card(Player *player, ShopItem *item, int deck_index)
 {
     int i;
