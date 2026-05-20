@@ -419,7 +419,7 @@ BattleResult show_temp_battle_screen(GameState *state)
             }
         }
         mvprintw(start_y + 25, start_x,
-                 "← → 선택   A/D 선택   Enter 사용   E 턴 종료   Q 종료");
+         "← → 선택   A/D 선택   Enter 사용   I 인벤토리   E 턴 종료   Q 종료");
 
         refresh();
 
@@ -480,8 +480,25 @@ BattleResult show_temp_battle_screen(GameState *state)
                 mvprintw(start_y + 27, start_x,
                          "카드를 사용할 수 없습니다. 에너지 또는 대상 상태를 확인하세요.");
                 refresh();
-                getch();
-            }
+                getch(); 
+	    }
+	} else if (ch == 'i' || ch == 'I') {
+         	clear();
+
+            	mvprintw(3, 5, "[ INVENTORY ]");
+            	mvprintw(5, 5, "1. Deck");
+            	mvprintw(6, 5, "2. Relics");
+
+            	refresh();
+
+           	int sub = getch();
+
+            	if (sub == '1') {
+                	show_deck_screen(player);
+            	}
+            	else if (sub == '2') {
+                	show_relic_inventory_screen(player);
+            	}
         } else if (ch == 'e' || ch == 'E') {
             if (player->hp <= 0) {
                 mvprintw(start_y + 27, start_x,
@@ -1181,4 +1198,231 @@ mvprintw(26, 2, "조작: %s", help_message);
             }
         }
     }
+}       
+//플레이어 덱 출력 화면
+void show_deck_screen(const Player *player)
+{
+    int selected = 0;
+    int ch;
+    int i;
+
+    if (player == NULL) {
+        return;
+    }
+
+    while (1) {
+
+        clear();
+
+        mvprintw(1, 3,
+                 "========== CURRENT DECK ==========");
+
+        for (i = 0; i < player->draw_count; i++) {
+
+            if (i == selected) {
+                mvprintw(i + 3, 5,
+                         "> %s",
+                         player->draw_pile[i].name);
+            } else {
+                mvprintw(i + 3, 5,
+                         "  %s",
+                         player->draw_pile[i].name);
+            }
+        }
+
+        mvprintw(LINES - 3, 3,
+                 "↑ ↓ : 이동");
+
+        mvprintw(LINES - 2, 3,
+                 "ENTER : 상세보기   Q : 돌아가기");
+
+        refresh();
+
+        ch = getch();
+
+        /* 위 방향키 */
+        if (ch == KEY_UP) {
+
+            selected--;
+
+            if (selected < 0) {
+                selected = player->draw_count - 1;
+            }
+        }
+
+        /* 아래 방향키 */
+        else if (ch == KEY_DOWN) {
+
+            selected++;
+
+            if (selected >= player->draw_count) {
+                selected = 0;
+            }
+        }
+
+        /* 엔터 */
+        else if (ch == '\n' || ch == KEY_ENTER) {
+
+            show_card_detail_screen(
+                &player->draw_pile[selected]);
+        }
+
+        /* 종료 */
+        else if (ch == 'q' || ch == 'Q') {
+
+            break;
+        }
+    }
+}
+// 플레이어 유물 출력 화면
+void show_relic_inventory_screen(const Player *player)
+{
+    int selected = 0;
+    int ch;
+    int i;
+
+    if (player == NULL) {
+        return;
+    }
+
+    while (1) {
+
+        clear();
+
+        mvprintw(1, 3,
+                 "============= RELICS =============");
+
+        if (player->relic_count <= 0) {
+
+            mvprintw(3, 5,
+                     "보유한 유물이 없습니다.");
+
+        } else {
+
+            for (i = 0; i < player->relic_count; i++) {
+
+                if (i == selected) {
+
+                    mvprintw(i + 3, 5,
+                             "> %s",
+                             player->relics[i].name);
+
+                } else {
+
+                    mvprintw(i + 3, 5,
+                             "  %s",
+                             player->relics[i].name);
+                }
+            }
+        }
+
+        mvprintw(LINES - 3, 3,
+                 "↑ ↓ : 이동");
+
+        mvprintw(LINES - 2, 3,
+                 "ENTER : 상세보기   Q : 돌아가기");
+
+        refresh();
+
+        ch = getch();
+
+        if (ch == KEY_UP) {
+
+            selected--;
+
+            if (selected < 0) {
+                selected = player->relic_count - 1;
+            }
+        }
+
+        else if (ch == KEY_DOWN) {
+
+            selected++;
+
+            if (selected >= player->relic_count) {
+                selected = 0;
+            }
+        }
+
+        else if (ch == '\n' || ch == KEY_ENTER) {
+
+            if (player->relic_count > 0) {
+
+                show_relic_detail_screen(
+                    &player->relics[selected]);
+            }
+        }
+
+        else if (ch == 'q' || ch == 'Q') {
+
+            break;
+        }
+    }
+}
+//카드 상세 정보 출력
+void show_card_detail_screen(const Card *card)
+{
+    clear();
+
+    if (card == NULL) {
+        mvprintw(3, 5, "카드 정보가 없습니다.");
+        refresh();
+        getch();
+        return;
+    }
+
+    mvprintw(1, 3, "========== CARD INFO ==========");
+
+    mvprintw(3, 5, "Name   : %s", card->name);
+    mvprintw(4, 5, "Cost   : %d", card->cost);
+
+    if (card->damage > 0) {
+        mvprintw(5, 5, "Damage : %d", card->damage);
+    }
+
+    if (card->block > 0) {
+        mvprintw(6, 5, "Block  : %d", card->block);
+    }
+
+    if (card->draw > 0) {
+        mvprintw(7, 5, "Draw   : %d", card->draw);
+    }
+
+    if (card->weak > 0) {
+        mvprintw(8, 5, "Weak   : %d", card->weak);
+    }
+
+    if (card->vulnerable > 0) {
+        mvprintw(9, 5, "Vulnerable : %d",
+                 card->vulnerable);
+    }
+
+    mvprintw(LINES - 2, 3,
+             "[ 아무 키나 누르면 돌아갑니다 ]");
+
+    refresh();
+    getch();
+}
+//유물 상세 정보 출력
+void show_relic_detail_screen(const Relic *relic)
+{
+    clear();
+
+    if (relic == NULL) {
+        mvprintw(3, 5, "유물 정보가 없습니다.");
+        refresh();
+        getch();
+        return;
+    }
+
+    mvprintw(1, 3, "========= RELIC INFO =========");
+
+    mvprintw(3, 5, "Name : %s", relic->name);
+    mvprintw(5, 5, "%s", relic->description);
+
+    mvprintw(LINES - 2, 3,
+             "[ 아무 키나 누르면 돌아갑니다 ]");
+
+    refresh();
+    getch();
 }
