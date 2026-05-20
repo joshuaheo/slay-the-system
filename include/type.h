@@ -133,6 +133,41 @@ typedef struct {
     int max_energy;
 } Player;
 
+#define SHOP_CARD_COUNT 5
+#define SHOP_RELIC_COUNT 2
+#define SHOP_REMOVE_COUNT 1
+#define SHOP_ITEM_COUNT 8
+#define SHOP_REMOVE_PRICE 75
+#define SHOP_MIN_DECK_SIZE 10
+
+//상점 상품 타입
+typedef enum {
+    SHOP_ITEM_EMPTY,
+    SHOP_ITEM_CARD,
+    SHOP_ITEM_RELIC,
+    SHOP_ITEM_REMOVE_CARD
+} ShopItemType;
+
+//상점 아이템 특성
+typedef struct {
+    ShopItemType type;
+
+    int price;
+    int original_price;
+    int discounted;
+    int sold;
+    int available;
+
+    Card card;
+    Relic relic;
+} ShopItem;
+
+//상점 구조체
+typedef struct {
+    ShopItem items[SHOP_ITEM_COUNT];
+    int item_count;
+} Shop;
+
 //적 상태
 typedef struct {
     char name[MAX_NAME_LEN];

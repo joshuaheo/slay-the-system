@@ -26,4 +26,6 @@ void show_card_remove_unavailable_screen(void);
 
 void show_relic_obtained_screen(const char *title, const Relic *relic);
 void show_no_relic_available_screen(void);
+
+int show_shop_screen(GameState *state, Shop *shop);
 #endif

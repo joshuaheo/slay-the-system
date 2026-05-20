@@ -6,6 +6,7 @@
 #include "map.h"
 #include "relic.h"
 #include "player.h"
+#include "shop.h"
 
 static int run_chest_stage(GameState *state);
 static int run_rest_stage(GameState *state);
@@ -45,7 +46,7 @@ void init_new_game(GameState *state, const char *username) {
     player->discard_count = 0;
     player->exhaust_count = 0;
 
-    player->gold = 99;
+    player->gold = 999;
 
     player->relic_count = 0;
 
@@ -71,6 +72,29 @@ void cleanup_after_battle(Player *player) {
     player->exhaust_count = 0;
 
     player->energy = player->max_energy;
+}
+
+static int run_shop_stage(GameState *state)
+{
+    Shop shop;
+
+    if (state == NULL) {
+        return 0;
+    }
+
+    generate_shop(&state->player, &shop);
+
+    if (!show_shop_screen(state, &shop)) {
+        return 0;
+    }
+
+    state->floor++;
+
+    if (!save_game(state)) {
+        return 0;
+    }
+
+    return 1;
 }
 
 //전투에서 이긴 후 흐름을 진행하는 함수
@@ -165,6 +189,7 @@ int run_current_stage(GameState *state) {
     case STAGE_REST:
         return run_rest_stage(state);
     case STAGE_SHOP:
+        return run_shop_stage(state);
     case STAGE_CHEST:
         return run_chest_stage(state);
     case STAGE_EVENT:

@@ -11,6 +11,7 @@
 #include "enemy.h"
 #include "relic.h"
 #include "reward.h"
+#include "shop.h"
 #include "map.h"
 
 //ncurses 시작 함수
@@ -262,6 +263,21 @@ static void show_card_added_message(const Card *card)
     getch();
 }
 
+//유물 요약 출력 함수
+static void print_relic_summary(const Player *player)
+{
+    if (player == NULL || player->relic_count <= 0) {
+        printw("없음");
+        return;
+    }
+
+    printw("%s", player->relics[0].name);
+
+    if (player->relic_count > 1) {
+        printw(" 외 %d개", player->relic_count - 1);
+    }
+}
+
 //임시 전투화면 출력 함수
 BattleResult show_temp_battle_screen(GameState *state)
 {
@@ -324,9 +340,10 @@ BattleResult show_temp_battle_screen(GameState *state)
 
         print_battle_line(start_y + 0, start_x, battle_width);
         mvprintw(start_y + 1, start_x,
-                 "Floor %-3d        Gold %-4d        Relic: 없음",
+                 "Floor %-3d        Gold %-4d        Relic: ",
                  state->floor,
                  player->gold);
+                 print_relic_summary(player);
         print_battle_line(start_y + 2, start_x, battle_width);
 
         mvprintw(start_y + 4, start_x, "Enemy: %s", enemies[0].name);
@@ -959,4 +976,205 @@ void show_no_relic_available_screen(void)
 
     refresh();
     getch();
+}
+
+static const char *shop_buy_result_message(ShopBuyResult result)
+{
+    switch (result) {
+    case SHOP_BUY_OK:
+        return "구매했습니다.";
+    case SHOP_BUY_SOLD:
+        return "이미 구매한 상품입니다.";
+    case SHOP_BUY_NOT_ENOUGH_GOLD:
+        return "골드가 부족합니다.";
+    case SHOP_BUY_NEED_CARD_SELECT:
+        return "제거할 카드를 선택하세요.";
+    case SHOP_BUY_DECK_FULL:
+        return "덱이 가득 찼습니다.";
+    case SHOP_BUY_RELIC_FULL:
+        return "유물을 더 이상 가질 수 없습니다.";
+    case SHOP_BUY_REMOVE_UNAVAILABLE:
+        return "덱이 10장 이하이면 카드를 제거할 수 없습니다.";
+    default:
+        return "구매할 수 없습니다.";
+    }
+}
+
+static void print_shop_item_line(int y, int x, int selected, int index, const ShopItem *item)
+{
+    const char *cursor;
+
+    cursor = selected ? ">" : " ";
+
+    if (item == NULL || !item->available) {
+        mvprintw(y, x, "%s [%d] 품절", cursor, index + 1);
+        return;
+    }
+
+    if (item->sold) {
+        switch (item->type) {
+        case SHOP_ITEM_CARD:
+            mvprintw(y, x, "%s [%d] %-16s SOLD", cursor, index + 1, item->card.name);
+            break;
+        case SHOP_ITEM_RELIC:
+            mvprintw(y, x, "%s [%d] %-16s SOLD", cursor, index + 1, item->relic.name);
+            break;
+        case SHOP_ITEM_REMOVE_CARD:
+            mvprintw(y, x, "%s [%d] 카드 제거        SOLD", cursor, index + 1);
+            break;
+        default:
+            mvprintw(y, x, "%s [%d] 품절", cursor, index + 1);
+            break;
+        }
+        return;
+    }
+
+    switch (item->type) {
+    case SHOP_ITEM_CARD:
+        mvprintw(y, x, "%s [%d] 카드  %-16s %3dG", cursor, index + 1, item->card.name, item->price);
+        if (item->discounted) {
+            printw(" SALE");
+        }
+        break;
+
+    case SHOP_ITEM_RELIC:
+        mvprintw(y, x, "%s [%d] 유물  %-16s %3dG", cursor, index + 1, item->relic.name, item->price);
+        if (item->discounted) {
+            printw(" SALE");
+        }
+        break;
+
+    case SHOP_ITEM_REMOVE_CARD:
+        mvprintw(y, x, "%s [%d] 서비스 카드 제거       %3dG", cursor, index + 1, item->price);
+        break;
+
+    default:
+        mvprintw(y, x, "%s [%d] 품절", cursor, index + 1);
+        break;
+    }
+}
+
+static void print_shop_item_description(int y, int x, const ShopItem *item)
+{
+    if (item == NULL || !item->available) {
+        mvprintw(y, x, "설명: 구매 가능한 상품이 없습니다.");
+        return;
+    }
+
+    switch (item->type) {
+    case SHOP_ITEM_CARD:
+        mvprintw(y, x, "설명: %s", item->card.description);
+        mvprintw(y + 1, x, "코스트: %d", item->card.cost);
+        break;
+
+    case SHOP_ITEM_RELIC:
+        mvprintw(y, x, "설명: %s", item->relic.description);
+        break;
+
+    case SHOP_ITEM_REMOVE_CARD:
+        mvprintw(y, x, "설명: 덱에서 카드 1장을 제거합니다.");
+        mvprintw(y + 1, x, "덱이 %d장 이하이면 제거할 수 없습니다.", SHOP_MIN_DECK_SIZE);
+        break;
+
+    default:
+        mvprintw(y, x, "설명: 없음");
+        break;
+    }
+}
+
+int show_shop_screen(GameState *state, Shop *shop)
+{
+    int selected = 0;
+    int ch;
+    int i;
+    int remove_index;
+    ShopBuyResult result;
+    const char *help_message = "W/S 또는 ↑/↓ 이동, Enter 구매, Q 상점 나가기 및 다음 층 이동";
+    const char *status_message = "";
+
+    if (state == NULL || shop == NULL) {
+        return 0;
+    }
+
+    keypad(stdscr, TRUE);
+
+    while (1) {
+        clear();
+
+        mvprintw(1, 2, "==================== 상점 ====================");
+        mvprintw(3, 2, "Floor %-3d    Gold %-4d", state->floor, state->player.gold);
+
+        mvprintw(5, 2, "Cards");
+        for (i = 0; i < 5 && i < shop->item_count; i++) {
+            print_shop_item_line(6 + i, 4, selected == i, i, &shop->items[i]);
+        }
+
+        mvprintw(12, 2, "Relics");
+        for (i = 5; i < 7 && i < shop->item_count; i++) {
+            print_shop_item_line(13 + (i - 5), 4, selected == i, i, &shop->items[i]);
+        }
+
+        mvprintw(16, 2, "Service");
+        if (shop->item_count > 7) {
+            print_shop_item_line(17, 4, selected == 7, 7, &shop->items[7]);
+        }
+
+        mvprintw(20, 2, "----------------------------------------------");
+        if (selected >= 0 && selected < shop->item_count) {
+            print_shop_item_description(21, 2, &shop->items[selected]);
+        }
+
+        mvprintw(24, 2, "----------------------------------------------");
+
+if (status_message[0] != '\0') {
+    mvprintw(25, 2, "상태: %s", status_message);
+} else {
+    mvprintw(25, 2, "상태: 상품을 선택하세요.");
+}
+
+mvprintw(26, 2, "조작: %s", help_message);
+
+        refresh();
+
+        ch = getch();
+
+        if (ch == 'q' || ch == 'Q') {
+            return 1;
+        }
+
+        if (ch == KEY_UP) {
+            if (selected > 0) {
+                selected--;
+            }
+        } else if (ch == KEY_DOWN) {
+            if (selected < shop->item_count - 1) {
+                selected++;
+            }
+        } else if (ch == '\n' || ch == KEY_ENTER || ch == 10 || ch == 13) {
+            if (selected < 0 || selected >= shop->item_count) {
+                status_message = "잘못된 선택입니다.";
+                continue;
+            }
+
+            if (shop->items[selected].type == SHOP_ITEM_REMOVE_CARD) {
+                result = buy_shop_item(&state->player, &shop->items[selected]);
+
+                if (result == SHOP_BUY_NEED_CARD_SELECT) {
+                    remove_index = show_remove_card_screen(&state->player);
+
+                    if (remove_index < 0) {
+                        status_message = "카드 제거를 취소했습니다.";
+                    } else {
+                        result = buy_shop_remove_card(&state->player, &shop->items[selected], remove_index);
+                        status_message = shop_buy_result_message(result);
+                    }
+                } else {
+                    status_message = shop_buy_result_message(result);
+                }
+            } else {
+                result = buy_shop_item(&state->player, &shop->items[selected]);
+                status_message = shop_buy_result_message(result);
+            }
+        }
+    }
 }
