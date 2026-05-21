@@ -267,10 +267,6 @@ static void apply_card_effect(Player *player, Enemy enemies[], int enemy_count, 
 
     if (card.energy > 0) {
         player->energy += card.energy;
-
-        if (player->energy > player->max_energy) {
-            player->energy = player->max_energy;
-        }
     }
 
     if (card.target == TARGET_SELF) {

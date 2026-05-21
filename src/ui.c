@@ -14,6 +14,8 @@
 #include "shop.h"
 #include "map.h"
 
+static void show_card_pile_screen(const char *title,const Card *cards,int count,int reverse_order);
+
 //ncurses 시작 함수
 void init_ui(void) {
     setlocale(LC_ALL, "");
@@ -483,23 +485,40 @@ BattleResult show_temp_battle_screen(GameState *state)
                 getch(); 
 	    }
 	} else if (ch == 'i' || ch == 'I') {
-         	clear();
+    clear();
 
-            	mvprintw(3, 5, "[ INVENTORY ]");
-            	mvprintw(5, 5, "1. Draw Deck");
-            	mvprintw(6, 5, "2. Relics");
+    mvprintw(3, 5, "[ INVENTORY ]");
+    mvprintw(5, 5, "1. Draw Deck");
+    mvprintw(6, 5, "2. Discard Pile");
+    mvprintw(7, 5, "3. Exhaust Pile");
+    mvprintw(8, 5, "4. Relics");
 
-            	refresh();
+    refresh();
 
-           	int sub = getch();
+    int sub = getch();
 
-            	if (sub == '1') {
-                	show_deck_screen(player);
-            	}
-            	else if (sub == '2') {
-                	show_relic_inventory_screen(player);
-            	}
-        } else if (ch == 'e' || ch == 'E') {
+    if (sub == '1') {
+        show_card_pile_screen("DRAW DECK",
+                              player->draw_pile,
+                              player->draw_count,
+                              1);
+    }
+    else if (sub == '2') {
+        show_card_pile_screen("DISCARD PILE",
+                              player->discard_pile,
+                              player->discard_count,
+                              0);
+    }
+    else if (sub == '3') {
+        show_card_pile_screen("EXHAUST PILE",
+                              player->exhaust_pile,
+                              player->exhaust_count,
+                              0);
+    }
+    else if (sub == '4') {
+        show_relic_inventory_screen(player);
+    }
+} else if (ch == 'e' || ch == 'E') {
             if (player->hp <= 0) {
                 mvprintw(start_y + 27, start_x,
                          "플레이어가 쓰러져 턴을 종료할 수 없습니다.");
@@ -1198,41 +1217,54 @@ int show_shop_screen(GameState *state, Shop *shop)
             }
         }
     }
-}       
-//플레이어 뽑을 카드 덱 출력 화면
-void show_deck_screen(const Player *player)
+}    
+
+//공용 카드 더미 출력 
+static void show_card_pile_screen(const char *title,const Card *cards,int count,int reverse_order)
 {
     int selected = 0;
     int ch;
     int i;
+    int card_index;
 
-    if (player == NULL) {
+    if (title == NULL || cards == NULL) {
         return;
     }
 
     while (1) {
-
         clear();
 
-        mvprintw(1, 3,
-                 "========== CURRENT DECK ==========");
+        mvprintw(1, 3, "========== %s ==========", title);
 
-        for (i = 0; i < player->draw_count; i++) {
+        if (count <= 0) {
+            mvprintw(3, 5, "카드 더미가 비어 있습니다.");
+            mvprintw(LINES - 2, 3, "Q : 돌아가기");
+
+            refresh();
+            ch = getch();
+
+            if (ch == 'q' || ch == 'Q') {
+                break;
+            }
+
+            continue;
+        }
+
+        for (i = 0; i < count; i++) {
+            if (reverse_order) {
+                card_index = count - 1 - i;
+            } else {
+                card_index = i;
+            }
 
             if (i == selected) {
-                mvprintw(i + 3, 5,
-                         "> %s",
-                         player->draw_pile[i].name);
+                mvprintw(i + 3, 5, "> %s", cards[card_index].name);
             } else {
-                mvprintw(i + 3, 5,
-                         "  %s",
-                         player->draw_pile[i].name);
+                mvprintw(i + 3, 5, "  %s", cards[card_index].name);
             }
         }
 
-        mvprintw(LINES - 3, 3,
-                 "↑ ↓ : 이동");
-
+        mvprintw(LINES - 3, 3, "↑ ↓ : 이동");
         mvprintw(LINES - 2, 3,
                  "ENTER : 상세보기   Q : 돌아가기");
 
@@ -1240,40 +1272,35 @@ void show_deck_screen(const Player *player)
 
         ch = getch();
 
-        /* 위 방향키 */
         if (ch == KEY_UP) {
-
             selected--;
 
             if (selected < 0) {
-                selected = player->draw_count - 1;
+                selected = count - 1;
             }
         }
-
-        /* 아래 방향키 */
         else if (ch == KEY_DOWN) {
-
             selected++;
 
-            if (selected >= player->draw_count) {
+            if (selected >= count) {
                 selected = 0;
             }
         }
-
-        /* 엔터 */
         else if (ch == '\n' || ch == KEY_ENTER) {
+            if (reverse_order) {
+                card_index = count - 1 - selected;
+            } else {
+                card_index = selected;
+            }
 
-            show_card_detail_screen(
-                &player->draw_pile[selected]);
+            show_card_detail_screen(&cards[card_index]);
         }
-
-        /* 종료 */
         else if (ch == 'q' || ch == 'Q') {
-
             break;
         }
     }
 }
+
 // 플레이어 유물 출력 화면
 void show_relic_inventory_screen(const Player *player)
 {
@@ -1359,6 +1386,7 @@ void show_relic_inventory_screen(const Player *player)
         }
     }
 }
+
 //카드 상세 정보 출력
 void show_card_detail_screen(const Card *card)
 {
