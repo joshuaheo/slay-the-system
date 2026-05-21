@@ -308,7 +308,7 @@ BattleResult show_temp_battle_screen(GameState *state)
 
     player = &state->player;
 
-    init_slime(&enemies[0]);
+    init_enemy(&enemies[0],ENEMY_SLIME);
 
     apply_relics_on_battle_start(player);
 

@@ -29,6 +29,12 @@ typedef enum {
     TARGET_RANDOM_ENEMY
 } TargetType;
 
+//적 구분 구조체
+typedef enum {
+    ENEMY_SLIME,
+    ENEMY_JAW_WORM
+} EnemyId;
+
 //카드 희귀도(시작,일반,고급,희귀)
 typedef enum {
     CARD_START,
@@ -162,6 +168,13 @@ typedef struct {
     Relic relic;
 } ShopItem;
 
+//적의 종류 구분 구조체
+typedef enum {
+    ENEMY_NORMAL,
+    ENEMY_ELITE,
+    ENEMY_BOSS
+} EnemyGrade;
+
 //상점 구조체
 typedef struct {
     ShopItem items[SHOP_ITEM_COUNT];
@@ -170,6 +183,9 @@ typedef struct {
 
 //적 상태
 typedef struct {
+    EnemyId id;
+    EnemyGrade grade;
+
     char name[MAX_NAME_LEN];
 
     int max_hp;
@@ -181,7 +197,25 @@ typedef struct {
     int vulnerable;
 
     int damage;
+
+    int turn_count;
+    int pattern_index;
+    int special_state;
 } Enemy;
+
+//한턴별 적의 행동 공용 구조체
+typedef struct {
+    int damage;
+    int hit_count;
+
+    int block;
+    int strength;
+
+    int weak;
+    int vulnerable;
+
+    int has_attack;
+} EnemyMove;
 
 //게임상태
 typedef enum {

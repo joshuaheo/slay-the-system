@@ -2,39 +2,21 @@
 
 #include "enemy.h"
 
-//슬라임 생성 함수
-void init_slime(Enemy *enemy)
+static void jaw_worm_take_turn(Enemy *enemy, Player *player);
+
+//enemy_move 초기화 함수
+static void clear_enemy_move(EnemyMove *move)
 {
-    if (enemy == NULL) {
+    if (move == NULL) {
         return;
     }
 
-    strncpy(enemy->name, "Slime", MAX_NAME_LEN - 1);
-    enemy->name[MAX_NAME_LEN - 1] = '\0';
-
-    enemy->max_hp = 30;
-    enemy->hp = 30;
-    enemy->block = 0;
-
-    enemy->strength = 0;
-    enemy->weak = 0;
-    enemy->vulnerable = 0;
-
-    enemy->damage = 6;
+    memset(move, 0, sizeof(EnemyMove));
+    move->hit_count = 1;
 }
 
-//적이 살아있는지 확인하는 함수
-int is_enemy_alive(const Enemy *enemy)
-{
-    if (enemy == NULL) {
-        return 0;
-    }
-
-    return enemy->hp > 0;
-}
-
-//적의 공격 최종데미지 계산함수
-int calculate_enemy_attack_damage(const Enemy *enemy, const Player *player)
+//적 공격 데미지 계산 함수(힘,약화,취약)
+static int calculate_enemy_attack_damage_with_base(const Enemy *enemy,const Player *player,int base_damage)
 {
     int damage;
 
@@ -46,7 +28,7 @@ int calculate_enemy_attack_damage(const Enemy *enemy, const Player *player)
         return 0;
     }
 
-    damage = enemy->damage + enemy->strength;
+    damage = base_damage + enemy->strength;
 
     if (damage < 0) {
         damage = 0;
@@ -67,8 +49,8 @@ int calculate_enemy_attack_damage(const Enemy *enemy, const Player *player)
     return damage;
 }
 
-//적이 플레이어를 공격하는 함수
-void enemy_attack_player(Enemy *enemy, Player *player)
+//적 공격이 실제로 적용되는 함수(방어도, 체력)
+static void enemy_attack_player_with_damage(Enemy *enemy,Player *player,int base_damage)
 {
     int damage;
     int blocked_damage;
@@ -81,7 +63,7 @@ void enemy_attack_player(Enemy *enemy, Player *player)
         return;
     }
 
-    damage = calculate_enemy_attack_damage(enemy, player);
+    damage = calculate_enemy_attack_damage_with_base(enemy,player,base_damage);
 
     if (damage <= 0) {
         return;
@@ -103,7 +85,177 @@ void enemy_attack_player(Enemy *enemy, Player *player)
     }
 }
 
-//임시 적의 패턴 함수
+//enemy_move 적용 함수
+static void apply_enemy_move(Enemy *enemy,Player *player,const EnemyMove *move)
+{
+    int i;
+    int hit_count;
+
+    if (enemy == NULL || player == NULL || move == NULL) {
+        return;
+    }
+
+    if (move->block > 0) {
+        enemy->block += move->block;
+    }
+
+    if (move->strength > 0) {
+        enemy->strength += move->strength;
+    }
+
+    if (move->weak > 0) {
+        player->weak += move->weak;
+    }
+
+    if (move->vulnerable > 0) {
+        player->vulnerable += move->vulnerable;
+    }
+
+    if (move->has_attack) {
+        hit_count = move->hit_count;
+
+        if (hit_count <= 0) {
+            hit_count = 1;
+        }
+
+        for (i = 0; i < hit_count; i++) {
+            enemy_attack_player_with_damage(enemy,player,move->damage);
+
+            if (player->hp <= 0) {
+                return;
+            }
+        }
+    }
+}
+
+//적 스탯 초기화 함수
+void init_enemy(Enemy *enemy, EnemyId id)
+{
+    if (enemy == NULL) {
+        return;
+    }
+
+    memset(enemy, 0, sizeof(Enemy));
+
+    enemy->id = id;
+
+    enemy->block = 0;
+    enemy->strength = 0;
+    enemy->weak = 0;
+    enemy->vulnerable = 0;
+
+    enemy->turn_count = 0;
+    enemy->pattern_index = 0;
+    enemy->special_state = 0;
+
+    switch (id) {
+    case ENEMY_SLIME:
+        enemy->grade = ENEMY_NORMAL;
+
+        strncpy(enemy->name, "Slime", MAX_NAME_LEN - 1);
+        enemy->name[MAX_NAME_LEN - 1] = '\0';
+
+        enemy->max_hp = 30;
+        enemy->hp = 30;
+        enemy->damage = 6;
+        break;
+
+    case ENEMY_JAW_WORM:
+        enemy->grade = ENEMY_NORMAL;
+
+        strncpy(enemy->name, "Jaw Worm", MAX_NAME_LEN - 1);
+        enemy->name[MAX_NAME_LEN - 1] = '\0';
+
+        enemy->max_hp = 40;
+        enemy->hp = 40;
+        enemy->damage = 12;
+        break;
+
+    default:
+        enemy->grade = ENEMY_NORMAL;
+
+        strncpy(enemy->name, "Unknown", MAX_NAME_LEN - 1);
+        enemy->name[MAX_NAME_LEN - 1] = '\0';
+
+        enemy->max_hp = 1;
+        enemy->hp = 1;
+        enemy->damage = 0;
+        break;
+    }
+}
+
+//적이 살아있는지 확인하는 함수
+int is_enemy_alive(const Enemy *enemy)
+{
+    if (enemy == NULL) {
+        return 0;
+    }
+
+    return enemy->hp > 0;
+}
+
+//적이 플레이어를 공격하는 함수
+void enemy_attack_player(Enemy *enemy, Player *player)
+{
+    int damage;
+    int blocked_damage;
+
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    if (enemy->hp <= 0 || player->hp <= 0) {
+        return;
+    }
+
+    damage = calculate_enemy_attack_damage_with_base(enemy, player,enemy->damage);
+
+    if (damage <= 0) {
+        return;
+    }
+
+    if (player->block >= damage) {
+        player->block -= damage;
+        damage = 0;
+    } else {
+        blocked_damage = player->block;
+        player->block = 0;
+        damage -= blocked_damage;
+    }
+
+    player->hp -= damage;
+
+    if (player->hp < 0) {
+        player->hp = 0;
+    }
+}
+
+//적별 패턴 연결 함수
+static void enemy_take_turn(Enemy *enemy, Player *player)
+{
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    if (!is_enemy_alive(enemy) || player->hp <= 0) {
+        return;
+    }
+
+    switch (enemy->id) {
+    case ENEMY_JAW_WORM:
+        jaw_worm_take_turn(enemy, player);
+        break;
+
+    case ENEMY_SLIME:
+    default:
+        enemy_attack_player_with_damage(enemy, player, enemy->damage);
+        break;
+    }
+
+    enemy->turn_count++;
+}
+
+//적 턴 진행 함수
 void enemies_take_turn(Enemy enemies[], int enemy_count, Player *player)
 {
     int i;
@@ -117,8 +269,41 @@ void enemies_take_turn(Enemy enemies[], int enemy_count, Player *player)
             return;
         }
 
-        if (is_enemy_alive(&enemies[i])) {
-            enemy_attack_player(&enemies[i], player);
-        }
+        enemy_take_turn(&enemies[i], player);
     }
+}
+
+//일반 몬스터 턱벌레 함수
+static void jaw_worm_take_turn(Enemy *enemy, Player *player)
+{
+    EnemyMove move;
+
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    clear_enemy_move(&move);
+
+    if (enemy->pattern_index == 0) {
+        move.has_attack = 1;
+        move.damage = 12;
+        move.hit_count = 1;
+
+        enemy->pattern_index = 1;
+    }
+    else if (enemy->pattern_index == 1) {
+        move.has_attack = 1;
+        move.damage = 6;
+        move.hit_count = 1;
+        move.block = 5;
+
+        enemy->pattern_index = 2;
+    }
+    else {
+        move.strength = 2;
+
+        enemy->pattern_index = 0;
+    }
+
+    apply_enemy_move(enemy, player, &move);
 }
