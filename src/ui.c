@@ -486,7 +486,7 @@ BattleResult show_temp_battle_screen(GameState *state)
          	clear();
 
             	mvprintw(3, 5, "[ INVENTORY ]");
-            	mvprintw(5, 5, "1. Deck");
+            	mvprintw(5, 5, "1. Draw Deck");
             	mvprintw(6, 5, "2. Relics");
 
             	refresh();
@@ -1147,13 +1147,13 @@ int show_shop_screen(GameState *state, Shop *shop)
 
         mvprintw(24, 2, "----------------------------------------------");
 
-if (status_message[0] != '\0') {
-    mvprintw(25, 2, "상태: %s", status_message);
-} else {
-    mvprintw(25, 2, "상태: 상품을 선택하세요.");
-}
+        if (status_message[0] != '\0') {
+            mvprintw(25, 2, "상태: %s", status_message);
+        } else {            
+            mvprintw(25, 2, "상태: 상품을 선택하세요.");
+        }
 
-mvprintw(26, 2, "조작: %s", help_message);
+        mvprintw(26, 2, "조작: %s", help_message);
 
         refresh();
 
@@ -1199,7 +1199,7 @@ mvprintw(26, 2, "조작: %s", help_message);
         }
     }
 }       
-//플레이어 덱 출력 화면
+//플레이어 뽑을 카드 덱 출력 화면
 void show_deck_screen(const Player *player)
 {
     int selected = 0;
@@ -1373,29 +1373,8 @@ void show_card_detail_screen(const Card *card)
 
     mvprintw(1, 3, "========== CARD INFO ==========");
 
-    mvprintw(3, 5, "Name   : %s", card->name);
-    mvprintw(4, 5, "Cost   : %d", card->cost);
-
-    if (card->damage > 0) {
-        mvprintw(5, 5, "Damage : %d", card->damage);
-    }
-
-    if (card->block > 0) {
-        mvprintw(6, 5, "Block  : %d", card->block);
-    }
-
-    if (card->draw > 0) {
-        mvprintw(7, 5, "Draw   : %d", card->draw);
-    }
-
-    if (card->weak > 0) {
-        mvprintw(8, 5, "Weak   : %d", card->weak);
-    }
-
-    if (card->vulnerable > 0) {
-        mvprintw(9, 5, "Vulnerable : %d",
-                 card->vulnerable);
-    }
+    mvprintw(3, 5, "[ %s ] Cost : %d", card->name,card->cost);
+    print_wrapped_text(5, 5, card->description, 60, 5);
 
     mvprintw(LINES - 2, 3,
              "[ 아무 키나 누르면 돌아갑니다 ]");
@@ -1403,6 +1382,7 @@ void show_card_detail_screen(const Card *card)
     refresh();
     getch();
 }
+
 //유물 상세 정보 출력
 void show_relic_detail_screen(const Relic *relic)
 {
@@ -1417,8 +1397,8 @@ void show_relic_detail_screen(const Relic *relic)
 
     mvprintw(1, 3, "========= RELIC INFO =========");
 
-    mvprintw(3, 5, "Name : %s", relic->name);
-    mvprintw(5, 5, "%s", relic->description);
+    mvprintw(3, 5, "[ %s ] ", relic->name);
+    print_wrapped_text(5, 5, relic->description,60,5);
 
     mvprintw(LINES - 2, 3,
              "[ 아무 키나 누르면 돌아갑니다 ]");

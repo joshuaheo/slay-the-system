@@ -74,6 +74,7 @@ void cleanup_after_battle(Player *player) {
     player->energy = player->max_energy;
 }
 
+//상점 스테이지 실행 함수
 static int run_shop_stage(GameState *state)
 {
     Shop shop;
