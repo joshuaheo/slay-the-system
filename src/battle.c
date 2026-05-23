@@ -173,7 +173,9 @@ static void deal_damage_to_enemy(Player *player, Enemy *enemy, int damage)
             enemy->block = 0;
         }
     }
-
+    if (enemy->id == ENEMY_INLET && final_damage > 0) {
+    final_damage = 1;
+}
     enemy->hp -= final_damage;
 
     if (enemy->hp < 0) {

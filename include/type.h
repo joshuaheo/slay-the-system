@@ -38,6 +38,7 @@ typedef enum {
     ENEMY_SHRINKER_BEETLE,
     ENEMY_SLUDGE_SPINNER,
     ENEMY_MAWLER,
+    ENEMY_INLET,
 } EnemyId;
 
 //카드 희귀도(시작,일반,고급,희귀)

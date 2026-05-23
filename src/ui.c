@@ -472,9 +472,9 @@ static void init_temp_battle_enemies(Enemy enemies[], int *enemy_count)
 
     *enemy_count = 3;
 
-    init_enemy(&enemies[0], ENEMY_MAWLER);
-    init_enemy(&enemies[1], ENEMY_JAW_WORM);
-    init_enemy(&enemies[2], ENEMY_SEAPUNK);
+    init_enemy(&enemies[0], ENEMY_INLET);
+    init_enemy(&enemies[1], ENEMY_INLET);
+    init_enemy(&enemies[2], ENEMY_INLET);
 }
 
 //적 의도 보여주는 함수
@@ -485,6 +485,16 @@ static const char *get_enemy_intent_text(const Enemy *enemy)
     }
 
     switch (enemy->id) {
+    case ENEMY_INLET:
+    if (enemy->pattern_index == 0) {
+        return "공격 3";
+    }
+    else if (enemy->pattern_index == 1) {
+        return "공격 2 x 3";
+    }
+    else {
+        return "공격 10";
+    }
     case ENEMY_MAWLER:
     if (enemy->pattern_index == 0) {
         return "공격 4 x 2";
@@ -793,11 +803,7 @@ static BattleResult handle_play_selected_card(GameState *state,Enemy enemies[],i
 }
 
 //턴종료 처리함수
-static BattleResult handle_end_turn(GameState *state,
-                                    Enemy enemies[],
-                                    int enemy_count,
-                                    int message_y,
-                                    int message_x)
+static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_count,int message_y,int message_x)
 {
     Player *player;
     BattleResult battle_result;

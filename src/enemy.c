@@ -25,6 +25,8 @@ static int choose_next_mawler_action(int previous_action, int roar_used);
 static void decrease_enemy_positive_value(int *value);
 static void decrease_enemy_turn_statuses(Enemy *enemy);
 
+static void inlet_take_turn(Enemy *enemy, Player *player);
+
 //enemy_move 초기화 함수
 static void clear_enemy_move(EnemyMove *move)
 {
@@ -170,6 +172,16 @@ void init_enemy(Enemy *enemy, EnemyId id)
     enemy->special_state = 0;
 
     switch (id) {
+    case ENEMY_INLET:
+    strncpy(enemy->name, "잉클릿", MAX_NAME_LEN - 1);
+    enemy->name[MAX_NAME_LEN - 1] = '\0';
+    enemy->grade = ENEMY_NORMAL;
+    enemy->max_hp = 11 + rand() % 7;
+    enemy->hp = enemy->max_hp;
+    enemy->damage = 3;
+    enemy->pattern_index = 1;
+    enemy->special_state = 0;
+    break;
     case ENEMY_MAWLER:
     strncpy(enemy->name, "장수아귀", MAX_NAME_LEN - 1);
     enemy->name[MAX_NAME_LEN - 1] = '\0';
@@ -315,6 +327,9 @@ static void enemy_take_turn(Enemy *enemy, Player *player)
     }
 
     switch (enemy->id) {
+    case ENEMY_INLET:
+    inlet_take_turn(enemy, player);
+    break;
     case ENEMY_MAWLER:
         mawler_take_turn(enemy, player);
         break;
@@ -634,6 +649,41 @@ static int choose_next_sludge_spinner_action(int previous_action)
     }
 
     return candidates[rand() % count];
+}
+
+//일반 몬스터 잉클릿 함수
+static void inlet_take_turn(Enemy *enemy, Player *player)
+{
+    EnemyMove move;
+    int action;
+
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    clear_enemy_move(&move);
+
+    action = enemy->pattern_index;
+
+    if (action == 0) {
+        move.has_attack = 1;
+        move.damage = 3;
+        move.hit_count = 1;
+    }
+    else if (action == 1) {
+        move.has_attack = 1;
+        move.damage = 2;
+        move.hit_count = 3;
+    }
+    else {
+        move.has_attack = 1;
+        move.damage = 10;
+        move.hit_count = 1;
+    }
+
+    apply_enemy_move(enemy, player, &move);
+
+    enemy->pattern_index = rand() % 3;
 }
 
 //적 버프 감소함수를 위한 보조함수
