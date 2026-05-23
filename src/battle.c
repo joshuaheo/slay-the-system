@@ -3,6 +3,11 @@
 #include "battle.h"
 #include "card.h"
 #include "relic.h"
+#include "enemy.h"
+
+static int g_shrink_effect_active = 0;
+
+static int has_active_shrink_effect(Enemy enemies[], int enemy_count);
 
 //카드가 몇 번 공격하는지 계산하는 함수.
 static int get_card_hit_count(const Card *card)
@@ -149,6 +154,10 @@ static void deal_damage_to_enemy(Player *player, Enemy *enemy, int damage)
 
     if (player->weak > 0) {
         final_damage = final_damage * 3 / 4;
+    }
+
+    if (g_shrink_effect_active) {
+        final_damage = final_damage * 7 / 10;
     }
 
     if (enemy->vulnerable > 0) {
@@ -427,7 +436,11 @@ int play_card(Player *player, Enemy enemies[], int enemy_count, int hand_index, 
         return 1;
     }
 
+    g_shrink_effect_active = has_active_shrink_effect(enemies, enemy_count);
+
     apply_card_effect(player, enemies, enemy_count, card, target_index);
+
+    g_shrink_effect_active = 0;
 
     if (card.draw > 0) {
         draw_cards(player, card.draw);
@@ -472,4 +485,28 @@ BattleResult check_battle_result(Player *player, Enemy enemies[], int enemy_coun
     }
 
     return BATTLE_CONTINUE;
+}
+
+//압축벌레가 살아있고 첫턴이 지났는지 확인하는 함수
+static int has_active_shrink_effect(Enemy enemies[], int enemy_count)
+{
+    int i;
+
+    if (enemies == NULL || enemy_count <= 0) {
+        return 0;
+    }
+
+    if (enemy_count > MAX_ENEMIES) {
+        enemy_count = MAX_ENEMIES;
+    }
+
+    for (i = 0; i < enemy_count; i++) {
+        if (enemies[i].id == ENEMY_SHRINKER_BEETLE &&
+            enemies[i].hp > 0 &&
+            enemies[i].turn_count > 0) {
+            return 1;
+        }
+    }
+
+    return 0;
 }

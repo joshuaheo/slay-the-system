@@ -32,8 +32,8 @@ static void draw_temp_battle_screen(GameState *state,Enemy enemies[],int enemy_c
 static void show_battle_inventory_menu(Player *player);
 
 static BattleResult handle_play_selected_card(GameState *state,Enemy enemies[],int enemy_count,int selected,int target_index,int message_y,int message_x);
-
 static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_count,int message_y,int message_x);
+static int has_active_shrink_effect_for_ui(Enemy enemies[], int enemy_count);
 
 //ncurses 시작 함수
 void init_ui(void) {
@@ -472,7 +472,7 @@ static void init_temp_battle_enemies(Enemy enemies[], int *enemy_count)
 
     *enemy_count = 3;
 
-    init_enemy(&enemies[0], ENEMY_FUZZY_WURM_CRAWLER);
+    init_enemy(&enemies[0], ENEMY_SHRINKER_BEETLE);
     init_enemy(&enemies[1], ENEMY_JAW_WORM);
     init_enemy(&enemies[2], ENEMY_SEAPUNK);
 }
@@ -485,43 +485,53 @@ static const char *get_enemy_intent_text(const Enemy *enemy)
     }
 
     switch (enemy->id) {
+    case ENEMY_SHRINKER_BEETLE:
+    if (enemy->turn_count == 0) {
+        return "압축: 플레이어 피해 -30%";
+    }
+
+    if (enemy->pattern_index == 0) {
+        return "공격 7";
+    }
+    return "공격 13";
+
     case ENEMY_FUZZY_WURM_CRAWLER:
     if (enemy->pattern_index == 0) {
-        return "Attack 4";
+        return "공격 4";
     }
     else if (enemy->pattern_index == 1) {
-        return "Gain Strength 7";
+        return "힘 7";
     }
     else if (enemy->pattern_index == 2) {
-        return "Attack 4";
+        return "공격 4";
     }
     else {
-        return "Attack 4";
+        return "공격 4";
     }
     case ENEMY_SEAPUNK:
     if (enemy->pattern_index == 0) {
-        return "Attack 11";
+        return "공격 11";
     }
     else if (enemy->pattern_index == 1) {
-        return "Attack 4 x 2";
+        return "공격 4 x 2";
     }
     else {
-        return "Block 7 + Strength 1";
+        return "방어도 7 + 힘 1";
     }
     case ENEMY_JAW_WORM:
         if (enemy->pattern_index == 0) {
-            return "Attack 12";
+            return "공격 12";
         }
         else if (enemy->pattern_index == 1) {
-            return "Attack 6 + Block 5";
+            return "공격 6 + 방어도 5";
         }
         else {
-            return "Gain Strength 2";
+            return "힘 2";
         }
 
     case ENEMY_SLIME:
     default:
-        return "Attack 6";
+        return "공격 6";
     }
 }
 
@@ -531,9 +541,11 @@ static void draw_temp_battle_screen(GameState *state,Enemy enemies[],int enemy_c
     Player *player;
     const Card *selected_card;
     int hand_count;
-    int start_y;
-    int start_x;
-    int i;
+int start_y;
+int start_x;
+int player_y;
+int card_y;
+int i;
 
     if (state == NULL || enemies == NULL || enemy_count <= 0) {
         return;
@@ -554,11 +566,10 @@ static void draw_temp_battle_screen(GameState *state,Enemy enemies[],int enemy_c
 
     hand_count = get_display_hand_count(player, max_display_hand);
 
-    clear();
-    int player_y;
-    player_y = start_y + 4 + enemy_count * 4 + 1;
-    int card_y;
-    card_y = player_y + 3;
+clear();
+
+player_y = start_y + 4 + enemy_count * 4 + 1;
+card_y = player_y + 4;
 
     print_battle_line(start_y + 0, start_x, battle_width);
     mvprintw(start_y + 1, start_x,
@@ -596,18 +607,27 @@ static void draw_temp_battle_screen(GameState *state,Enemy enemies[],int enemy_c
     print_battle_dash(player_y - 2, start_x, battle_width);
 
     mvprintw(player_y, start_x,
-        "Player: %s",
-        player->name);
-        mvprintw(player_y + 1, start_x,
-            "HP %d/%d   Block %d   Energy %d/%d   Str %d   Weak %d   Vul %d",
-            player->hp,
-            player->max_hp,
-            player->block,
-            player->energy,
-            player->max_energy,
-            player->strength,
-            player->weak,
-            player->vulnerable);
+         "Player: %s",
+         player->name);
+
+mvprintw(player_y + 1, start_x,
+         "HP %d/%d   Block %d   Energy %d/%d   Str %d   Weak %d   Vul %d",
+         player->hp,
+         player->max_hp,
+         player->block,
+         player->energy,
+         player->max_energy,
+         player->strength,
+         player->weak,
+         player->vulnerable);
+
+if (has_active_shrink_effect_for_ui(enemies, enemy_count)) {
+    mvprintw(player_y + 2, start_x,
+             "Status: 압축  - 플레이어가 주는 피해 30%% 감소");
+} else {
+    mvprintw(player_y + 2, start_x,
+             "Status: 정상");
+}
 
 print_battle_line(card_y, start_x, battle_width);
 
@@ -788,6 +808,30 @@ static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_c
     draw_cards(player, 5);
 
     return BATTLE_CONTINUE;
+}
+
+//압축 여부 확인 함수
+static int has_active_shrink_effect_for_ui(Enemy enemies[], int enemy_count)
+{
+    int i;
+
+    if (enemies == NULL || enemy_count <= 0) {
+        return 0;
+    }
+
+    if (enemy_count > MAX_ENEMIES) {
+        enemy_count = MAX_ENEMIES;
+    }
+
+    for (i = 0; i < enemy_count; i++) {
+        if (enemies[i].id == ENEMY_SHRINKER_BEETLE &&
+            enemies[i].hp > 0 &&
+            enemies[i].turn_count > 0) {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 //카드 설명 줄바꿈 함수

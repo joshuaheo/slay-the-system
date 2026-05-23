@@ -5,6 +5,7 @@
 static void jaw_worm_take_turn(Enemy *enemy, Player *player);
 static void seapunk_take_turn(Enemy *enemy, Player *player);
 static void fuzzy_wurm_crawler_take_turn(Enemy *enemy, Player *player);
+static void shrinker_beetle_take_turn(Enemy *enemy, Player *player);
 
 //enemy_move 초기화 함수
 static void clear_enemy_move(EnemyMove *move)
@@ -151,6 +152,16 @@ void init_enemy(Enemy *enemy, EnemyId id)
     enemy->special_state = 0;
 
     switch (id) {
+    case ENEMY_SHRINKER_BEETLE:
+        enemy->grade = ENEMY_NORMAL;
+
+        strncpy(enemy->name, "압축벌레", MAX_NAME_LEN - 1);
+        enemy->name[MAX_NAME_LEN - 1] = '\0';
+
+        enemy->max_hp = 39;
+        enemy->hp = 39;
+        enemy->damage = 7;
+        break;
     case ENEMY_FUZZY_WURM_CRAWLER:
         enemy->grade = ENEMY_NORMAL;
 
@@ -263,6 +274,9 @@ static void enemy_take_turn(Enemy *enemy, Player *player)
     }
 
     switch (enemy->id) {
+    case ENEMY_SHRINKER_BEETLE:
+        shrinker_beetle_take_turn(enemy, player);
+        break;
     case ENEMY_FUZZY_WURM_CRAWLER:
         fuzzy_wurm_crawler_take_turn(enemy, player);
         break;
@@ -406,6 +420,39 @@ static void fuzzy_wurm_crawler_take_turn(Enemy *enemy, Player *player)
         move.hit_count = 1;
 
         enemy->pattern_index = 1;
+    }
+
+    apply_enemy_move(enemy, player, &move);
+}
+
+//일반 몬스터 압축벌레 함수
+static void shrinker_beetle_take_turn(Enemy *enemy, Player *player)
+{
+    EnemyMove move;
+
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    clear_enemy_move(&move);
+
+    if (enemy->turn_count == 0) {
+        return;
+    }
+
+    if (enemy->pattern_index == 0) {
+        move.has_attack = 1;
+        move.damage = 7;
+        move.hit_count = 1;
+
+        enemy->pattern_index = 1;
+    }
+    else {
+        move.has_attack = 1;
+        move.damage = 13;
+        move.hit_count = 1;
+
+        enemy->pattern_index = 0;
     }
 
     apply_enemy_move(enemy, player, &move);
