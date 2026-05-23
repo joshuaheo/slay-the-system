@@ -3,6 +3,7 @@
 #include "enemy.h"
 
 static void jaw_worm_take_turn(Enemy *enemy, Player *player);
+static void seapunk_take_turn(Enemy *enemy, Player *player);
 
 //enemy_move 초기화 함수
 static void clear_enemy_move(EnemyMove *move)
@@ -170,6 +171,15 @@ void init_enemy(Enemy *enemy, EnemyId id)
         enemy->hp = 40;
         enemy->damage = 12;
         break;
+           
+    case ENEMY_SEAPUNK:
+        enemy->grade = ENEMY_NORMAL;
+        strncpy(enemy->name, "Seapunk", MAX_NAME_LEN - 1);
+        enemy->name[MAX_NAME_LEN - 1] = '\0';
+        enemy->max_hp = 45;
+        enemy->hp = 45;
+        enemy->damage = 11;
+        break;
 
     default:
         enemy->grade = ENEMY_NORMAL;
@@ -245,6 +255,9 @@ static void enemy_take_turn(Enemy *enemy, Player *player)
     case ENEMY_JAW_WORM:
         jaw_worm_take_turn(enemy, player);
         break;
+    case ENEMY_SEAPUNK:    
+        seapunk_take_turn(enemy, player);    
+        break;
 
     case ENEMY_SLIME:
     default:
@@ -273,7 +286,42 @@ void enemies_take_turn(Enemy enemies[], int enemy_count, Player *player)
     }
 }
 
-//일반 몬스터 턱벌레 함수
+//일반 몬스터 블랑 해초 함수
+static void seapunk_take_turn(Enemy *enemy, Player *player)
+{
+    EnemyMove move;
+
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    clear_enemy_move(&move);
+
+    if (enemy->pattern_index == 0) {
+        move.has_attack = 1;
+        move.damage = 11;
+        move.hit_count = 1;
+
+        enemy->pattern_index = 1;
+    }
+    else if (enemy->pattern_index == 1) {
+        move.has_attack = 1;
+        move.damage = 4;
+        move.hit_count = 2;
+
+        enemy->pattern_index = 2;
+    }
+    else {
+        move.block = 7;
+        move.strength = 1;
+
+        enemy->pattern_index = 0;
+    }
+
+    apply_enemy_move(enemy, player, &move);
+}
+
+//일반 몬스터 깨작이 함수
 static void jaw_worm_take_turn(Enemy *enemy, Player *player)
 {
     EnemyMove move;

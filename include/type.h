@@ -32,7 +32,8 @@ typedef enum {
 //적 구분 구조체
 typedef enum {
     ENEMY_SLIME,
-    ENEMY_JAW_WORM
+    ENEMY_JAW_WORM,
+    ENEMY_SEAPUNK
 } EnemyId;
 
 //카드 희귀도(시작,일반,고급,희귀)
