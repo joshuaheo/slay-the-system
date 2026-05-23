@@ -472,9 +472,9 @@ static void init_temp_battle_enemies(Enemy enemies[], int *enemy_count)
 
     *enemy_count = 3;
 
-    init_enemy(&enemies[0], ENEMY_CUBEX_CONSTRUCT);
-    init_enemy(&enemies[1], ENEMY_INLET);
-    init_enemy(&enemies[2], ENEMY_INLET);
+    init_enemy(&enemies[0], ENEMY_TWIG_SLIME);
+    init_enemy(&enemies[1], ENEMY_LEAF_SLIME);
+    init_enemy(&enemies[2], ENEMY_LEAF_SLIME);
 }
 
 //적 의도 보여주는 함수
@@ -485,6 +485,18 @@ static const char *get_enemy_intent_text(const Enemy *enemy)
     }
 
     switch (enemy->id) {
+    case ENEMY_TWIG_SLIME:
+    if (enemy->pattern_index == 0) {
+        return "버린 더미에 점액투성이 1장 추가";
+    } else {
+        return "공격 11";
+    }
+    case ENEMY_LEAF_SLIME:
+    if (enemy->pattern_index == 0) {
+        return "버린 더미에 점액투성이 2장 추가";
+    } else {
+        return "공격 8";
+    }
     case ENEMY_CUBEX_CONSTRUCT:
     if (enemy->pattern_index == 0) {
         return "힘 2";
@@ -849,7 +861,6 @@ static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_c
     decrease_player_turn_statuses(player);
 
     discard_hand(player);
-    player->block = 0;
 
     enemies_take_turn(enemies, enemy_count, player);
 
@@ -859,6 +870,7 @@ static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_c
         return battle_result;
     }
 
+    player->block = 0;
     player->energy = player->max_energy;
     draw_cards(player, 5);
 

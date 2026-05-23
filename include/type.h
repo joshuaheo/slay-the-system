@@ -13,7 +13,8 @@
 typedef enum {
     CARD_ATTACK,
     CARD_SKILL,
-    CARD_POWER
+    CARD_POWER,
+    CARD_STATUS
 } CardType;
 
 //공용구조체로만 해결되지 않는 카드들
@@ -40,6 +41,8 @@ typedef enum {
     ENEMY_MAWLER,
     ENEMY_INLET,
     ENEMY_CUBEX_CONSTRUCT,
+    ENEMY_LEAF_SLIME,
+    ENEMY_TWIG_SLIME,
 } EnemyId;
 
 //카드 희귀도(시작,일반,고급,희귀)

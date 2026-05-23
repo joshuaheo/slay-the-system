@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "enemy.h"
+#include "card.h"
 
 #define SLUDGE_OIL_SPRAY 0
 #define SLUDGE_SLAM      1
@@ -28,6 +29,11 @@ static void decrease_enemy_turn_statuses(Enemy *enemy);
 static void inlet_take_turn(Enemy *enemy, Player *player);
 
 static void cubex_construct_take_turn(Enemy *enemy, Player *player);
+
+static void leaf_slime_take_turn(Enemy *enemy, Player *player);
+
+static void twig_slime_take_turn(Enemy *enemy, Player *player);
+static int choose_next_twig_slime_action(int previous_action, int streak);
 
 //enemy_move 초기화 함수
 static void clear_enemy_move(EnemyMove *move)
@@ -174,6 +180,26 @@ void init_enemy(Enemy *enemy, EnemyId id)
     enemy->special_state = 0;
 
     switch (id) {
+    case ENEMY_TWIG_SLIME:
+    strncpy(enemy->name, "가지 슬라임", MAX_NAME_LEN - 1);
+    enemy->name[MAX_NAME_LEN - 1] = '\0';
+    enemy->grade = ENEMY_NORMAL;
+    enemy->max_hp = 26 + rand() % 3;
+    enemy->hp = enemy->max_hp;
+    enemy->damage = 11;
+    enemy->pattern_index = 0;
+    enemy->special_state = -1;
+    break;
+    case ENEMY_LEAF_SLIME:
+    strncpy(enemy->name, "나뭇잎 슬라임 중", MAX_NAME_LEN - 1);
+    enemy->name[MAX_NAME_LEN - 1] = '\0';
+    enemy->grade = ENEMY_NORMAL;
+    enemy->max_hp = 32 + rand() % 4;
+    enemy->hp = enemy->max_hp;
+    enemy->damage = 8;
+    enemy->pattern_index = 0;
+    enemy->special_state = 0;
+    break;
     case ENEMY_CUBEX_CONSTRUCT:
     strncpy(enemy->name, "큐브형 구조체", MAX_NAME_LEN - 1);
     enemy->name[MAX_NAME_LEN - 1] = '\0';
@@ -340,6 +366,12 @@ static void enemy_take_turn(Enemy *enemy, Player *player)
     }
 
     switch (enemy->id) {
+    case ENEMY_TWIG_SLIME:
+        twig_slime_take_turn(enemy, player);
+        break;
+    case ENEMY_LEAF_SLIME:
+        leaf_slime_take_turn(enemy, player);
+        break;
     case ENEMY_CUBEX_CONSTRUCT:
         cubex_construct_take_turn(enemy, player);
         break;
@@ -766,3 +798,85 @@ static void decrease_enemy_turn_statuses(Enemy *enemy)
     decrease_enemy_positive_value(&enemy->vulnerable);
 }
 
+//일반 몬스터 나뭇잎 슬라임 함수 
+static void leaf_slime_take_turn(Enemy *enemy, Player *player)
+{
+    EnemyMove move;
+    Card goop;
+
+    if (enemy->pattern_index == 0) {
+    goop = create_goop_card();
+    add_card_to_discard(player, goop);
+
+    goop = create_goop_card();
+    add_card_to_discard(player, goop);
+} else {
+    move.has_attack = 1;
+    move.damage = 8;
+    move.hit_count = 1;
+
+    apply_enemy_move(enemy, player, &move);
+}
+
+enemy->pattern_index = 1 - enemy->pattern_index;
+}
+
+//가지 슬라임 다음 패턴 판정 함수
+static int choose_next_twig_slime_action(int previous_action, int streak)
+{
+    if (previous_action == 0 && streak >= 1) {
+        return 1;
+    }
+
+    if (previous_action == 1 && streak >= 2) {
+        return 0;
+    }
+
+    return rand() % 2;
+}
+
+//일반 몬스터 가지 슬라임 함수
+static void twig_slime_take_turn(Enemy *enemy, Player *player)
+{
+    EnemyMove move;
+    Card goop;
+    int action;
+    int previous_action;
+    int previous_streak;
+    int next_streak;
+
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    clear_enemy_move(&move);
+
+    action = enemy->pattern_index;
+
+    if (action == 0) {
+        goop = create_goop_card();
+        add_card_to_discard(player, goop);
+    } else {
+        move.has_attack = 1;
+        move.damage = 11;
+        move.hit_count = 1;
+        apply_enemy_move(enemy, player, &move);
+    }
+
+    previous_action = -1;
+    previous_streak = 0;
+
+    if (enemy->special_state >= 0) {
+        previous_action = enemy->special_state % 10;
+        previous_streak = enemy->special_state / 10;
+    }
+
+    if (action == previous_action) {
+        next_streak = previous_streak + 1;
+    } else {
+        next_streak = 1;
+    }
+
+    enemy->special_state = action + next_streak * 10;
+    enemy->pattern_index = choose_next_twig_slime_action(action, next_streak);
+}

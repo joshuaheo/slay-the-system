@@ -1,6 +1,7 @@
 #include "card.h"
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 //카드 인덱스
@@ -711,4 +712,46 @@ void prepare_battle_deck(Player *player)
 
     shuffle_draw_pile(player);
     draw_cards(player, 5);
+}
+
+//점액투성이 카드 생성 함수
+Card create_goop_card(void)
+{
+    Card card;
+
+    memset(&card, 0, sizeof(Card));
+
+    strncpy(card.name, "점액투성이", MAX_NAME_LEN - 1);
+    card.name[MAX_NAME_LEN - 1] = '\0';
+
+    strncpy(card.description, "카드를 1장 뽑습니다. 소멸.", sizeof(card.description) - 1);
+    card.description[sizeof(card.description) - 1] = '\0';
+
+    card.type = CARD_STATUS;
+    card.rarity = CARD_COMMON;
+    card.target = TARGET_SELF;
+    card.cost = 1;
+    card.draw = 1;
+    card.exhaust = 1;
+    card.hit_count = 1;
+    card.special = SPECIAL_NONE;
+
+    return card;
+}
+
+//버린 카드 더미에 카드 추가 함수
+int add_card_to_discard(Player *player, Card card)
+{
+    if (player == NULL) {
+        return 0;
+    }
+
+    if (player->discard_count >= MAX_DECK_SIZE) {
+        return 0;
+    }
+
+    player->discard_pile[player->discard_count] = card;
+    player->discard_count++;
+
+    return 1;
 }
