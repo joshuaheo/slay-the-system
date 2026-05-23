@@ -472,7 +472,7 @@ static void init_temp_battle_enemies(Enemy enemies[], int *enemy_count)
 
     *enemy_count = 3;
 
-    init_enemy(&enemies[0], ENEMY_SLIME);
+    init_enemy(&enemies[0], ENEMY_FUZZY_WURM_CRAWLER);
     init_enemy(&enemies[1], ENEMY_JAW_WORM);
     init_enemy(&enemies[2], ENEMY_SEAPUNK);
 }
@@ -485,6 +485,19 @@ static const char *get_enemy_intent_text(const Enemy *enemy)
     }
 
     switch (enemy->id) {
+    case ENEMY_FUZZY_WURM_CRAWLER:
+    if (enemy->pattern_index == 0) {
+        return "Attack 4";
+    }
+    else if (enemy->pattern_index == 1) {
+        return "Gain Strength 7";
+    }
+    else if (enemy->pattern_index == 2) {
+        return "Attack 4";
+    }
+    else {
+        return "Attack 4";
+    }
     case ENEMY_SEAPUNK:
     if (enemy->pattern_index == 0) {
         return "Attack 11";

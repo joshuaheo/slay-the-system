@@ -88,7 +88,7 @@ static const Card card_pool[] = {
         .cost = 1,
 
         .damage = 0,
-        .block = 5,
+        .block = 999,
 
         .strength = 0,
         .weak = 0,

@@ -4,6 +4,7 @@
 
 static void jaw_worm_take_turn(Enemy *enemy, Player *player);
 static void seapunk_take_turn(Enemy *enemy, Player *player);
+static void fuzzy_wurm_crawler_take_turn(Enemy *enemy, Player *player);
 
 //enemy_move 초기화 함수
 static void clear_enemy_move(EnemyMove *move)
@@ -150,10 +151,20 @@ void init_enemy(Enemy *enemy, EnemyId id)
     enemy->special_state = 0;
 
     switch (id) {
+    case ENEMY_FUZZY_WURM_CRAWLER:
+        enemy->grade = ENEMY_NORMAL;
+
+        strncpy(enemy->name, "복슬지렁이", MAX_NAME_LEN - 1);
+        enemy->name[MAX_NAME_LEN - 1] = '\0';
+
+        enemy->max_hp = 56;
+        enemy->hp = 56;
+        enemy->damage = 4;
+        break;    
     case ENEMY_SLIME:
         enemy->grade = ENEMY_NORMAL;
 
-        strncpy(enemy->name, "Slime", MAX_NAME_LEN - 1);
+        strncpy(enemy->name, "슬라임", MAX_NAME_LEN - 1);
         enemy->name[MAX_NAME_LEN - 1] = '\0';
 
         enemy->max_hp = 30;
@@ -164,7 +175,7 @@ void init_enemy(Enemy *enemy, EnemyId id)
     case ENEMY_JAW_WORM:
         enemy->grade = ENEMY_NORMAL;
 
-        strncpy(enemy->name, "Jaw Worm", MAX_NAME_LEN - 1);
+        strncpy(enemy->name, "깨작이", MAX_NAME_LEN - 1);
         enemy->name[MAX_NAME_LEN - 1] = '\0';
 
         enemy->max_hp = 40;
@@ -174,7 +185,7 @@ void init_enemy(Enemy *enemy, EnemyId id)
            
     case ENEMY_SEAPUNK:
         enemy->grade = ENEMY_NORMAL;
-        strncpy(enemy->name, "Seapunk", MAX_NAME_LEN - 1);
+        strncpy(enemy->name, "불량 해초", MAX_NAME_LEN - 1);
         enemy->name[MAX_NAME_LEN - 1] = '\0';
         enemy->max_hp = 45;
         enemy->hp = 45;
@@ -252,6 +263,9 @@ static void enemy_take_turn(Enemy *enemy, Player *player)
     }
 
     switch (enemy->id) {
+    case ENEMY_FUZZY_WURM_CRAWLER:
+        fuzzy_wurm_crawler_take_turn(enemy, player);
+        break;
     case ENEMY_JAW_WORM:
         jaw_worm_take_turn(enemy, player);
         break;
@@ -351,6 +365,47 @@ static void jaw_worm_take_turn(Enemy *enemy, Player *player)
         move.strength = 2;
 
         enemy->pattern_index = 0;
+    }
+
+    apply_enemy_move(enemy, player, &move);
+}
+
+//일반 몬스터 복슬지렁이 함수
+static void fuzzy_wurm_crawler_take_turn(Enemy *enemy, Player *player)
+{
+    EnemyMove move;
+
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    clear_enemy_move(&move);
+
+    if (enemy->pattern_index == 0) {
+        move.has_attack = 1;
+        move.damage = 4;
+        move.hit_count = 1;
+
+        enemy->pattern_index = 1;
+    }
+    else if (enemy->pattern_index == 1) {
+        move.strength = 7;
+
+        enemy->pattern_index = 2;
+    }
+    else if (enemy->pattern_index == 2) {
+        move.has_attack = 1;
+        move.damage = 4;
+        move.hit_count = 1;
+
+        enemy->pattern_index = 3;
+    }
+    else {
+        move.has_attack = 1;
+        move.damage = 4;
+        move.hit_count = 1;
+
+        enemy->pattern_index = 1;
     }
 
     apply_enemy_move(enemy, player, &move);
