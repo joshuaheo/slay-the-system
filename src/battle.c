@@ -361,7 +361,6 @@ void decrease_turn_statuses(Player *player, Enemy enemies[], int enemy_count)
     int i;
 
     if (player != NULL) {
-        decrease_positive_value(&player->strength);
         decrease_positive_value(&player->weak);
         decrease_positive_value(&player->vulnerable);
     }
@@ -375,7 +374,6 @@ void decrease_turn_statuses(Player *player, Enemy enemies[], int enemy_count)
     }
 
     for (i = 0; i < enemy_count; i++) {
-        decrease_positive_value(&enemies[i].strength);
         decrease_positive_value(&enemies[i].weak);
         decrease_positive_value(&enemies[i].vulnerable);
     }
