@@ -472,7 +472,7 @@ static void init_temp_battle_enemies(Enemy enemies[], int *enemy_count)
 
     *enemy_count = 3;
 
-    init_enemy(&enemies[0], ENEMY_SLUDGE_SPINNER);
+    init_enemy(&enemies[0], ENEMY_MAWLER);
     init_enemy(&enemies[1], ENEMY_JAW_WORM);
     init_enemy(&enemies[2], ENEMY_SEAPUNK);
 }
@@ -485,6 +485,16 @@ static const char *get_enemy_intent_text(const Enemy *enemy)
     }
 
     switch (enemy->id) {
+    case ENEMY_MAWLER:
+    if (enemy->pattern_index == 0) {
+        return "공격 4 x 2";
+    }
+    else if (enemy->pattern_index == 1) {
+        return "공격 14";
+    }
+    else {
+        return "취약 3";
+    }
     case ENEMY_SLUDGE_SPINNER:
     if (enemy->pattern_index == 0) {
         return "기름 분사: 공격 8 + 약화 1";

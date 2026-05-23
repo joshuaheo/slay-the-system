@@ -7,13 +7,20 @@
 #define SLUDGE_SLAM      1
 #define SLUDGE_RAGE      2
 
+#define MAWLER_CLAW 0
+#define MAWLER_RIP_AND_TEAR 1
+#define MAWLER_ROAR 2
+
 static void jaw_worm_take_turn(Enemy *enemy, Player *player);
 static void seapunk_take_turn(Enemy *enemy, Player *player);
 static void fuzzy_wurm_crawler_take_turn(Enemy *enemy, Player *player);
 static void shrinker_beetle_take_turn(Enemy *enemy, Player *player);
+
 static void sludge_spinner_take_turn(Enemy *enemy, Player *player);
 static int choose_next_sludge_spinner_action(int previous_action);
 
+static void mawler_take_turn(Enemy *enemy, Player *player);
+static int choose_next_mawler_action(int previous_action, int roar_used);
 
 static void decrease_enemy_positive_value(int *value);
 static void decrease_enemy_turn_statuses(Enemy *enemy);
@@ -163,6 +170,16 @@ void init_enemy(Enemy *enemy, EnemyId id)
     enemy->special_state = 0;
 
     switch (id) {
+    case ENEMY_MAWLER:
+    strncpy(enemy->name, "장수아귀", MAX_NAME_LEN - 1);
+    enemy->name[MAX_NAME_LEN - 1] = '\0';
+    enemy->grade = ENEMY_NORMAL;
+    enemy->max_hp = 72;
+    enemy->hp = enemy->max_hp;
+    enemy->damage = 4;
+    enemy->pattern_index = MAWLER_CLAW;
+    enemy->special_state = -1;
+    break;
     case ENEMY_SLUDGE_SPINNER:
         enemy->grade = ENEMY_NORMAL;
 
@@ -298,6 +315,9 @@ static void enemy_take_turn(Enemy *enemy, Player *player)
     }
 
     switch (enemy->id) {
+    case ENEMY_MAWLER:
+        mawler_take_turn(enemy, player);
+        break;
     case ENEMY_SLUDGE_SPINNER:
         sludge_spinner_take_turn(enemy, player);
         break;
@@ -523,7 +543,81 @@ static void sludge_spinner_take_turn(Enemy *enemy, Player *player)
     apply_enemy_move(enemy, player, &move);
 }
 
-//직전행동을 제외한 2개 중 하나를 랜덤으로 고르는 함수
+//장수아귀 직전행동을 제외한 2개중 하나를 랜덤으로 고르는 함수
+static int choose_next_mawler_action(int previous_action, int roar_used)
+{
+    int candidates[3];
+    int count;
+
+    count = 0;
+
+    if (previous_action != MAWLER_CLAW) {
+        candidates[count] = MAWLER_CLAW;
+        count++;
+    }
+
+    if (previous_action != MAWLER_RIP_AND_TEAR) {
+        candidates[count] = MAWLER_RIP_AND_TEAR;
+        count++;
+    }
+
+    if (!roar_used) {
+        candidates[count] = MAWLER_ROAR;
+        count++;
+    }
+
+    if (count <= 0) {
+        return MAWLER_CLAW;
+    }
+
+    return candidates[rand() % count];
+}
+
+//일반 몬스터 장수아귀 함수
+static void mawler_take_turn(Enemy *enemy, Player *player)
+{
+    EnemyMove move;
+    int action;
+    int previous_action;
+    int roar_used;
+
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    clear_enemy_move(&move);
+
+    action = enemy->pattern_index;
+
+    if (enemy->special_state >= 10) {
+        roar_used = 1;
+    } else {
+        roar_used = 0;
+    }
+
+    if (action == MAWLER_CLAW) {
+        move.has_attack = 1;
+        move.damage = 4;
+        move.hit_count = 2;
+    }
+    else if (action == MAWLER_RIP_AND_TEAR) {
+        move.has_attack = 1;
+        move.damage = 14;
+        move.hit_count = 1;
+    }
+    else {
+        move.vulnerable = 3;
+        roar_used = 1;
+    }
+
+    apply_enemy_move(enemy, player, &move);
+
+    previous_action = action;
+    enemy->special_state = previous_action + roar_used * 10;
+    enemy->pattern_index = choose_next_mawler_action(previous_action, roar_used);
+}
+
+//오물팽이 직전행동을 제외한 2개 중 하나를 랜덤으로 고르는 함수
 static int choose_next_sludge_spinner_action(int previous_action)
 {
     int candidates[2];

@@ -36,7 +36,8 @@ typedef enum {
     ENEMY_SEAPUNK,
     ENEMY_FUZZY_WURM_CRAWLER,
     ENEMY_SHRINKER_BEETLE,
-    ENEMY_SLUDGE_SPINNER
+    ENEMY_SLUDGE_SPINNER,
+    ENEMY_MAWLER,
 } EnemyId;
 
 //카드 희귀도(시작,일반,고급,희귀)
