@@ -1,11 +1,22 @@
 #include <string.h>
+#include <stdlib.h>
 
 #include "enemy.h"
+
+#define SLUDGE_OIL_SPRAY 0
+#define SLUDGE_SLAM      1
+#define SLUDGE_RAGE      2
 
 static void jaw_worm_take_turn(Enemy *enemy, Player *player);
 static void seapunk_take_turn(Enemy *enemy, Player *player);
 static void fuzzy_wurm_crawler_take_turn(Enemy *enemy, Player *player);
 static void shrinker_beetle_take_turn(Enemy *enemy, Player *player);
+static void sludge_spinner_take_turn(Enemy *enemy, Player *player);
+static int choose_next_sludge_spinner_action(int previous_action);
+
+
+static void decrease_enemy_positive_value(int *value);
+static void decrease_enemy_turn_statuses(Enemy *enemy);
 
 //enemy_move 초기화 함수
 static void clear_enemy_move(EnemyMove *move)
@@ -152,6 +163,19 @@ void init_enemy(Enemy *enemy, EnemyId id)
     enemy->special_state = 0;
 
     switch (id) {
+    case ENEMY_SLUDGE_SPINNER:
+        enemy->grade = ENEMY_NORMAL;
+
+        strncpy(enemy->name, "오물팽이", MAX_NAME_LEN - 1);
+        enemy->name[MAX_NAME_LEN - 1] = '\0';
+
+        enemy->max_hp = 38;
+        enemy->hp = 38;
+        enemy->damage = 8;
+        
+        enemy->pattern_index = SLUDGE_OIL_SPRAY;
+        enemy->special_state = -1;
+        break;
     case ENEMY_SHRINKER_BEETLE:
         enemy->grade = ENEMY_NORMAL;
 
@@ -274,6 +298,9 @@ static void enemy_take_turn(Enemy *enemy, Player *player)
     }
 
     switch (enemy->id) {
+    case ENEMY_SLUDGE_SPINNER:
+        sludge_spinner_take_turn(enemy, player);
+        break;
     case ENEMY_SHRINKER_BEETLE:
         shrinker_beetle_take_turn(enemy, player);
         break;
@@ -292,7 +319,7 @@ static void enemy_take_turn(Enemy *enemy, Player *player)
         enemy_attack_player_with_damage(enemy, player, enemy->damage);
         break;
     }
-
+    decrease_enemy_turn_statuses(enemy);
     enemy->turn_count++;
 }
 
@@ -457,3 +484,84 @@ static void shrinker_beetle_take_turn(Enemy *enemy, Player *player)
 
     apply_enemy_move(enemy, player, &move);
 }
+
+//일반 몬스터 오물팽이 함수
+static void sludge_spinner_take_turn(Enemy *enemy, Player *player)
+{
+    EnemyMove move;
+    int action;
+
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    clear_enemy_move(&move);
+
+    action = enemy->pattern_index;
+
+    if (action == SLUDGE_OIL_SPRAY) {
+        move.has_attack = 1;
+        move.damage = 8;
+        move.hit_count = 1;
+        move.weak = 1;
+    }
+    else if (action == SLUDGE_SLAM) {
+        move.has_attack = 1;
+        move.damage = 11;
+        move.hit_count = 1;
+    }
+    else {
+        move.has_attack = 1;
+        move.damage = 6;
+        move.hit_count = 1;
+        move.strength = 3;
+    }
+
+    enemy->special_state = action;
+    enemy->pattern_index = choose_next_sludge_spinner_action(enemy->special_state);
+
+    apply_enemy_move(enemy, player, &move);
+}
+
+//직전행동을 제외한 2개 중 하나를 랜덤으로 고르는 함수
+static int choose_next_sludge_spinner_action(int previous_action)
+{
+    int candidates[2];
+    int count;
+    int i;
+
+    count = 0;
+
+    for (i = 0; i < 3; i++) {
+        if (i != previous_action) {
+            candidates[count] = i;
+            count++;
+        }
+    }
+
+    return candidates[rand() % count];
+}
+
+//적 버프 감소함수를 위한 보조함수
+static void decrease_enemy_positive_value(int *value)
+{
+    if (value == NULL) {
+        return;
+    }
+
+    if (*value > 0) {
+        (*value)--;
+    }
+}
+
+//적 상태 버프 감소 함수
+static void decrease_enemy_turn_statuses(Enemy *enemy)
+{
+    if (enemy == NULL) {
+        return;
+    }
+
+    decrease_enemy_positive_value(&enemy->weak);
+    decrease_enemy_positive_value(&enemy->vulnerable);
+}
+

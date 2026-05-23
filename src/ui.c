@@ -472,7 +472,7 @@ static void init_temp_battle_enemies(Enemy enemies[], int *enemy_count)
 
     *enemy_count = 3;
 
-    init_enemy(&enemies[0], ENEMY_SHRINKER_BEETLE);
+    init_enemy(&enemies[0], ENEMY_SLUDGE_SPINNER);
     init_enemy(&enemies[1], ENEMY_JAW_WORM);
     init_enemy(&enemies[2], ENEMY_SEAPUNK);
 }
@@ -485,6 +485,16 @@ static const char *get_enemy_intent_text(const Enemy *enemy)
     }
 
     switch (enemy->id) {
+    case ENEMY_SLUDGE_SPINNER:
+    if (enemy->pattern_index == 0) {
+        return "기름 분사: 공격 8 + 약화 1";
+    }
+    else if (enemy->pattern_index == 1) {
+        return "내려찍기: 공격 11";
+    }
+    else {
+        return "격노: 공격 6 + 힘 3";
+    }
     case ENEMY_SHRINKER_BEETLE:
     if (enemy->turn_count == 0) {
         return "압축: 플레이어 피해 -30%";
@@ -773,12 +783,16 @@ static BattleResult handle_play_selected_card(GameState *state,Enemy enemies[],i
 }
 
 //턴종료 처리함수
-static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_count,int message_y,int message_x)
+static BattleResult handle_end_turn(GameState *state,
+                                    Enemy enemies[],
+                                    int enemy_count,
+                                    int message_y,
+                                    int message_x)
 {
     Player *player;
     BattleResult battle_result;
 
-    if (state == NULL || enemies == NULL) {
+    if (state == NULL || enemies == NULL || enemy_count <= 0) {
         return BATTLE_CONTINUE;
     }
 
@@ -791,7 +805,11 @@ static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_c
         return BATTLE_CONTINUE;
     }
 
+    decrease_player_turn_statuses(player);
+
     discard_hand(player);
+    player->block = 0;
+
     enemies_take_turn(enemies, enemy_count, player);
 
     battle_result = check_battle_result(player, enemies, enemy_count);
@@ -800,11 +818,7 @@ static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_c
         return battle_result;
     }
 
-    decrease_turn_statuses(player, enemies, enemy_count);
-
-    player->block = 0;
     player->energy = player->max_energy;
-
     draw_cards(player, 5);
 
     return BATTLE_CONTINUE;

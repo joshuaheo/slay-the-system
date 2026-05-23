@@ -15,4 +15,7 @@ void decrease_turn_statuses(Player *player, Enemy enemies[], int enemy_count);
 int are_all_enemies_dead(Enemy enemies[], int enemy_count);
 BattleResult check_battle_result(Player *player, Enemy enemies[], int enemy_count);
 
+void decrease_positive_value(int *value);
+void decrease_player_turn_statuses(Player *player);
+
 #endif

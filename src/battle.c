@@ -353,7 +353,7 @@ static void move_used_card(Player *player, Card card)
 }
 
 //양수 값을 1줄이는 보조함수
-static void decrease_positive_value(int *value)
+void decrease_positive_value(int *value)
 {
     if (value == NULL) {
         return;
@@ -364,28 +364,15 @@ static void decrease_positive_value(int *value)
     }
 }
 
-//턴이 지날 때 임시 상태값들을 1씩 줄이는 함수.
-void decrease_turn_statuses(Player *player, Enemy enemies[], int enemy_count)
+//플레이어 버프 감소 함수
+void decrease_player_turn_statuses(Player *player)
 {
-    int i;
-
-    if (player != NULL) {
-        decrease_positive_value(&player->weak);
-        decrease_positive_value(&player->vulnerable);
-    }
-
-    if (enemies == NULL || enemy_count <= 0) {
+    if (player == NULL) {
         return;
     }
 
-    if (enemy_count > MAX_ENEMIES) {
-        enemy_count = MAX_ENEMIES;
-    }
-
-    for (i = 0; i < enemy_count; i++) {
-        decrease_positive_value(&enemies[i].weak);
-        decrease_positive_value(&enemies[i].vulnerable);
-    }
+    decrease_positive_value(&player->weak);
+    decrease_positive_value(&player->vulnerable);
 }
 
 //카드 실제 사용 함수
