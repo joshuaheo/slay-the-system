@@ -39,6 +39,7 @@ typedef enum {
     ENEMY_SLUDGE_SPINNER,
     ENEMY_MAWLER,
     ENEMY_INLET,
+    ENEMY_CUBEX_CONSTRUCT,
 } EnemyId;
 
 //카드 희귀도(시작,일반,고급,희귀)

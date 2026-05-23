@@ -472,7 +472,7 @@ static void init_temp_battle_enemies(Enemy enemies[], int *enemy_count)
 
     *enemy_count = 3;
 
-    init_enemy(&enemies[0], ENEMY_INLET);
+    init_enemy(&enemies[0], ENEMY_CUBEX_CONSTRUCT);
     init_enemy(&enemies[1], ENEMY_INLET);
     init_enemy(&enemies[2], ENEMY_INLET);
 }
@@ -485,6 +485,19 @@ static const char *get_enemy_intent_text(const Enemy *enemy)
     }
 
     switch (enemy->id) {
+    case ENEMY_CUBEX_CONSTRUCT:
+    if (enemy->pattern_index == 0) {
+        return "힘 2";
+    }
+    else if (enemy->pattern_index == 1 || enemy->pattern_index == 2) {
+        return "공격 7 + 힘 2";
+    }
+    else if (enemy->pattern_index == 3) {
+        return "공격 5 x 2";
+    }
+    else {
+        return "방어도 15";
+    }
     case ENEMY_INLET:
     if (enemy->pattern_index == 0) {
         return "공격 3";
@@ -507,13 +520,13 @@ static const char *get_enemy_intent_text(const Enemy *enemy)
     }
     case ENEMY_SLUDGE_SPINNER:
     if (enemy->pattern_index == 0) {
-        return "기름 분사: 공격 8 + 약화 1";
+        return "공격 8 + 약화 1";
     }
     else if (enemy->pattern_index == 1) {
-        return "내려찍기: 공격 11";
+        return "공격 11";
     }
     else {
-        return "격노: 공격 6 + 힘 3";
+        return "공격 6 + 힘 3";
     }
     case ENEMY_SHRINKER_BEETLE:
     if (enemy->turn_count == 0) {
@@ -622,6 +635,17 @@ card_y = player_y + 4;
         attroff(A_REVERSE);
     }
 
+    if (enemies[i].id == ENEMY_CUBEX_CONSTRUCT) {
+    mvprintw(enemy_y + 1, start_x,
+             "HP %d/%d   Block %d   Str %d   Weak %d   Vul %d   Art %d",
+             enemies[i].hp,
+             enemies[i].max_hp,
+             enemies[i].block,
+             enemies[i].strength,
+             enemies[i].weak,
+             enemies[i].vulnerable,
+             enemies[i].special_state);
+} else {
     mvprintw(enemy_y + 1, start_x,
              "HP %d/%d   Block %d   Str %d   Weak %d   Vul %d",
              enemies[i].hp,
@@ -630,6 +654,7 @@ card_y = player_y + 4;
              enemies[i].strength,
              enemies[i].weak,
              enemies[i].vulnerable);
+}
 
     mvprintw(enemy_y + 2, start_x,"Intent: %s",get_enemy_intent_text(&enemies[i]));
 }

@@ -186,6 +186,8 @@ static void deal_damage_to_enemy(Player *player, Enemy *enemy, int damage)
 //적에게 상태이상을 부여하는 함수
 static void apply_enemy_status_effect(Enemy *enemy, Card card)
 {
+    int artifact_blocked;
+
     if (enemy == NULL) {
         return;
     }
@@ -194,12 +196,28 @@ static void apply_enemy_status_effect(Enemy *enemy, Card card)
         return;
     }
 
+    artifact_blocked = 0;
+
     if (card.weak > 0) {
-        enemy->weak += card.weak;
+        if (enemy->id == ENEMY_CUBEX_CONSTRUCT &&
+            enemy->special_state > 0 &&
+            artifact_blocked == 0) {
+            enemy->special_state--;
+            artifact_blocked = 1;
+        } else {
+            enemy->weak += card.weak;
+        }
     }
 
     if (card.vulnerable > 0) {
-        enemy->vulnerable += card.vulnerable;
+        if (enemy->id == ENEMY_CUBEX_CONSTRUCT &&
+            enemy->special_state > 0 &&
+            artifact_blocked == 0) {
+            enemy->special_state--;
+            artifact_blocked = 1;
+        } else {
+            enemy->vulnerable += card.vulnerable;
+        }
     }
 }
 

@@ -27,6 +27,8 @@ static void decrease_enemy_turn_statuses(Enemy *enemy);
 
 static void inlet_take_turn(Enemy *enemy, Player *player);
 
+static void cubex_construct_take_turn(Enemy *enemy, Player *player);
+
 //enemy_move 초기화 함수
 static void clear_enemy_move(EnemyMove *move)
 {
@@ -172,6 +174,17 @@ void init_enemy(Enemy *enemy, EnemyId id)
     enemy->special_state = 0;
 
     switch (id) {
+    case ENEMY_CUBEX_CONSTRUCT:
+    strncpy(enemy->name, "큐브형 구조체", MAX_NAME_LEN - 1);
+    enemy->name[MAX_NAME_LEN - 1] = '\0';
+    enemy->grade = ENEMY_NORMAL;
+    enemy->max_hp = 65;
+    enemy->hp = enemy->max_hp;
+    enemy->block = 13;
+    enemy->damage = 7;
+    enemy->pattern_index = 0;
+    enemy->special_state = 1;
+    break;
     case ENEMY_INLET:
     strncpy(enemy->name, "잉클릿", MAX_NAME_LEN - 1);
     enemy->name[MAX_NAME_LEN - 1] = '\0';
@@ -327,9 +340,12 @@ static void enemy_take_turn(Enemy *enemy, Player *player)
     }
 
     switch (enemy->id) {
+    case ENEMY_CUBEX_CONSTRUCT:
+        cubex_construct_take_turn(enemy, player);
+        break;
     case ENEMY_INLET:
-    inlet_take_turn(enemy, player);
-    break;
+        inlet_take_turn(enemy, player);
+        break;
     case ENEMY_MAWLER:
         mawler_take_turn(enemy, player);
         break;
@@ -684,6 +700,47 @@ static void inlet_take_turn(Enemy *enemy, Player *player)
     apply_enemy_move(enemy, player, &move);
 
     enemy->pattern_index = rand() % 3;
+}
+
+//일반 몬스터 큐브형 구조체 함수
+static void cubex_construct_take_turn(Enemy *enemy, Player *player)
+{
+    EnemyMove move;
+    int action;
+
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    clear_enemy_move(&move);
+
+    action = enemy->pattern_index;
+
+    if (action == 0) {
+        move.strength = 2;
+    }
+    else if (action == 1 || action == 2) {
+        move.has_attack = 1;
+        move.damage = 7;
+        move.hit_count = 1;
+        move.strength = 2;
+    }
+    else if (action == 3) {
+        move.has_attack = 1;
+        move.damage = 5;
+        move.hit_count = 2;
+    }
+    else {
+        move.block = 15;
+    }
+
+    apply_enemy_move(enemy, player, &move);
+
+    enemy->pattern_index++;
+
+    if (enemy->pattern_index > 4) {
+        enemy->pattern_index = 0;
+    }
 }
 
 //적 버프 감소함수를 위한 보조함수
