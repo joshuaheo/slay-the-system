@@ -41,6 +41,8 @@ static void init_normal_enemies(int floor,Enemy enemies[], int *enemy_count);
 static void init_start_normal_enemies(Enemy enemies[], int *enemy_count);
 static void init_later_normal_enemies(Enemy enemies[], int *enemy_count);
 static void init_battle_enemies(StageType stage,int floor, Enemy enemies[], int *enemy_count);
+
+static int make_card_hand_display_name(const char *src, char *dest, int dest_size);
 #endif
 //ncurses 시작 함수
 void init_ui(void) {
@@ -505,6 +507,7 @@ static void init_elite_enemies(Enemy enemies[], int *enemy_count)
     }
 }
 
+//3층이전까지의 일반적 설정 함수
 static void init_start_normal_enemies(Enemy enemies[], int *enemy_count)
 {
     int encounter;
@@ -542,6 +545,7 @@ static void init_start_normal_enemies(Enemy enemies[], int *enemy_count)
     }
 }
 
+//4층이후 일반적 설정 함수
 static void init_later_normal_enemies(Enemy enemies[], int *enemy_count)
 {
     int encounter;
@@ -627,6 +631,7 @@ static void init_later_normal_enemies(Enemy enemies[], int *enemy_count)
     }
 }
 
+//일반적 설정 함수
 static void init_normal_enemies(int floor, Enemy enemies[], int *enemy_count)
 {
     if (enemies == NULL || enemy_count == NULL) {
@@ -962,16 +967,30 @@ mvprintw(card_y + 8, start_x, "Hand");
 for (i = 0; i < hand_count; i++) {
     int row = card_y + 9 + (i / 5);
     int col = start_x + (i % 5) * card_slot_width;
+    char display_name[MAX_NAME_LEN];
+    int corrupted;
+
+    corrupted = make_card_hand_display_name(player->hand[i].name,
+                                            display_name,
+                                            sizeof(display_name));
 
     if (i == selected) {
         attron(A_REVERSE);
     }
 
-    mvprintw(row, col,
-             "[%d]%s(%d)",
-             i + 1,
-             player->hand[i].name,
-             player->hand[i].cost);
+    if (corrupted) {
+        mvprintw(row, col,
+                 "[%d]%s*(%d)",
+                 i + 1,
+                 display_name,
+                 player->hand[i].cost);
+    } else {
+        mvprintw(row, col,
+                 "[%d]%s(%d)",
+                 i + 1,
+                 display_name,
+                 player->hand[i].cost);
+    }
 
     if (i == selected) {
         attroff(A_REVERSE);
@@ -983,6 +1002,7 @@ mvprintw(card_y + 12, start_x,
 
     refresh();
 }
+
 
 //인벤토리 화면 출력 함수
 static void show_battle_inventory_menu(Player *player)
@@ -2072,4 +2092,265 @@ void show_relic_detail_screen(const Relic *relic)
 
     refresh();
     getch();
+}
+
+//이벤트 함수
+
+//이벤트 공생체 화면 함수
+int show_symbiote_event_screen(void)
+{
+    int ch;
+
+    while (1) {
+        clear();
+
+        mvprintw(2, 5, "==================== 이벤트: 공생체 ====================");
+        mvprintw(5, 5, "길을 나아가던 도중, 형태가 일정하지 않은 검은 덩어리를 발견합니다.");
+        mvprintw(6, 5, "그 덩어리는 오래되고 사악한 존재처럼 꿈틀거립니다.");
+
+        mvprintw(9, 5, "[1] 다가간다");
+        mvprintw(10, 9, "공격 카드 1장을 선택해 [오염]시킵니다.");
+        mvprintw(11, 9, "[오염] 카드는 피해량이 50%% 증가하지만, 사용할 때 체력을 2 잃습니다.");
+
+        mvprintw(14, 5, "[2] 불로 태워 죽인다.");
+        mvprintw(15, 9, "카드 1장을 선택해 덱에서 제거합니다.");
+
+        mvprintw(18, 5, "1 또는 2를 눌러 선택하세요.");
+
+        refresh();
+
+        ch = getch();
+
+        if (ch == '1') {
+            return 1;
+        }
+
+        if (ch == '2') {
+            return 2;
+        }
+    }
+}
+
+//공격카드만 선택가능한 화면 함수
+int show_attack_card_select_screen(const Player *player)
+{
+    int attack_indices[MAX_DECK_SIZE];
+    int attack_count;
+    int selected;
+    int page;
+    int cards_per_page;
+    int total_pages;
+    int start_index;
+    int end_index;
+    int i;
+    int ch;
+    int rows;
+    int cols;
+    int desc_width;
+    int deck_index;
+
+    if (player == NULL || player->owned_deck_count <= 0) {
+        return -1;
+    }
+
+    attack_count = 0;
+
+    for (i = 0; i < player->owned_deck_count; i++) {
+        if (player->owned_deck[i].type == CARD_ATTACK &&
+            player->owned_deck[i].damage > 0) {
+            attack_indices[attack_count] = i;
+            attack_count++;
+        }
+    }
+
+    if (attack_count <= 0) {
+        return -1;
+    }
+
+    selected = 0;
+    page = 0;
+    cards_per_page = 10;
+
+    total_pages = (attack_count + cards_per_page - 1) / cards_per_page;
+
+    while (1) {
+        getmaxyx(stdscr, rows, cols);
+
+        desc_width = cols - 10;
+        if (desc_width < 20) {
+            desc_width = 20;
+        }
+
+        start_index = page * cards_per_page;
+        end_index = start_index + cards_per_page;
+
+        if (end_index > attack_count) {
+            end_index = attack_count;
+        }
+
+        if (selected < start_index) {
+            selected = start_index;
+        }
+
+        if (selected >= end_index) {
+            selected = end_index - 1;
+        }
+
+        deck_index = attack_indices[selected];
+
+        clear();
+
+        mvprintw(2, 5, "오염시킬 공격 카드를 선택하세요.");
+        mvprintw(3, 5, "[오염] 효과: 피해량 50%% 증가, 사용할 때 체력 2 손실");
+        mvprintw(4, 5, "공격 카드 수: %d", attack_count);
+        mvprintw(5, 5, "페이지: %d / %d", page + 1, total_pages);
+        mvprintw(6, 5, "W/S 또는 ↑/↓ 이동, A/D 또는 ←/→ 페이지 이동, Enter 선택, Q 취소");
+
+        for (i = start_index; i < end_index; i++) {
+            int line_y;
+            int current_deck_index;
+            const Card *card;
+
+            line_y = 8 + (i - start_index);
+            current_deck_index = attack_indices[i];
+            card = &player->owned_deck[current_deck_index];
+
+            if (i == selected) {
+                attron(A_REVERSE);
+            }
+
+            mvprintw(line_y, 5, "%2d. [%d] %s  피해 %d  HP손실 %d",
+                     current_deck_index + 1,
+                     card->cost,
+                     card->name,
+                     card->damage,
+                     card->hp_loss);
+
+            if (i == selected) {
+                attroff(A_REVERSE);
+            }
+        }
+
+        mvprintw(rows - 6, 5, "선택 카드:");
+        mvprintw(rows - 5, 5, "%s  피해 %d  HP손실 %d",
+                 player->owned_deck[deck_index].name,
+                 player->owned_deck[deck_index].damage,
+                 player->owned_deck[deck_index].hp_loss);
+
+        mvprintw(rows - 4, 5, "카드 설명:");
+        print_wrapped_text(rows - 3, 5,
+                           player->owned_deck[deck_index].description,
+                           desc_width,
+                           2);
+
+        refresh();
+
+        ch = getch();
+
+        if (ch == KEY_UP || ch == 'w' || ch == 'W') {
+            selected--;
+
+            if (selected < start_index) {
+                selected = end_index - 1;
+            }
+        }
+        else if (ch == KEY_DOWN || ch == 's' || ch == 'S') {
+            selected++;
+
+            if (selected >= end_index) {
+                selected = start_index;
+            }
+        }
+        else if (ch == KEY_LEFT || ch == 'a' || ch == 'A') {
+            if (page > 0) {
+                page--;
+                selected = page * cards_per_page;
+            }
+        }
+        else if (ch == KEY_RIGHT || ch == 'd' || ch == 'D') {
+            if (page < total_pages - 1) {
+                page++;
+                selected = page * cards_per_page;
+            }
+        }
+        else if (ch == '\n' || ch == KEY_ENTER || ch == 10 || ch == 13) {
+            return attack_indices[selected];
+        }
+        else if (ch == 'q' || ch == 'Q') {
+            return -1;
+        }
+    }
+}
+
+//오염 결과 화면 함수
+void show_card_corrupted_screen(const Card *card)
+{
+    clear();
+
+    if (card != NULL) {
+        mvprintw(5, 5, "%s 카드가 [오염]되었습니다.", card->name);
+        mvprintw(7, 5, "현재 피해량: %d", card->damage);
+        mvprintw(8, 5, "사용 시 체력 손실: %d", card->hp_loss);
+    }
+    else {
+        mvprintw(5, 5, "카드가 [오염]되었습니다.");
+    }
+
+    mvprintw(11, 5, "아무 키나 누르면 다음 층으로 이동합니다.");
+
+    refresh();
+    getch();
+
+    clear();
+    refresh();
+}
+
+//오염가능한 카드가 없을때 나오는 화면
+void show_no_attack_card_screen(void)
+{
+    clear();
+
+    mvprintw(5, 5, "오염시킬 수 있는 공격 카드가 없습니다.");
+    mvprintw(7, 5, "아무 키나 누르면 다음 층으로 이동합니다.");
+
+    refresh();
+    getch();
+
+    clear();
+    refresh();
+}
+
+//오염 디버프 표기 함수
+static int make_card_hand_display_name(const char *src, char *dest, int dest_size)
+{
+    const char *tag;
+    int i;
+    int corrupted;
+
+    if (dest == NULL || dest_size <= 0) {
+        return 0;
+    }
+
+    dest[0] = '\0';
+
+    if (src == NULL) {
+        return 0;
+    }
+
+    tag = strstr(src, " [오염]");
+    corrupted = tag != NULL;
+
+    if (tag != NULL) {
+        for (i = 0; i < dest_size - 1 && src + i < tag; i++) {
+            dest[i] = src[i];
+        }
+        dest[i] = '\0';
+    } else {
+        for (i = 0; i < dest_size - 1 && src[i] != '\0'; i++) {
+            dest[i] = src[i];
+        }
+        dest[i] = '\0';
+    }
+
+    return corrupted;
 }

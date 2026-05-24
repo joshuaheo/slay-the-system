@@ -7,6 +7,7 @@
 #include "relic.h"
 #include "player.h"
 #include "shop.h"
+#include "event.h"
 
 static int run_chest_stage(GameState *state);
 static int run_rest_stage(GameState *state);
@@ -195,11 +196,7 @@ int run_current_stage(GameState *state) {
     case STAGE_CHEST:
         return run_chest_stage(state);
     case STAGE_EVENT:
-        state->floor++;
-
-        if (!save_game(state)) {
-            return 0;
-        }
+        return run_event_stage(state);
 
         return 1;
 
