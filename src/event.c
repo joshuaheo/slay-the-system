@@ -5,7 +5,7 @@
 #include "save.h"
 #include "ui.h"
 
-#define EVENT_COUNT 2
+#define EVENT_COUNT 3
 
 static int run_random_event(GameState *state);
 static int run_mutating_forest_event(GameState *state);
@@ -15,6 +15,7 @@ static int has_attack_card_to_corrupt(const Player *player);
 static void append_corrupted_tag(Card *card);
 static void corrupt_attack_card(Card *card);
 static int run_symbiote_event(GameState *state);
+static int run_jungle_maze_event(GameState *state);
 
 //공격카드에 오염을 추가하는 함수
 static int has_attack_card_to_corrupt(const Player *player)
@@ -146,8 +147,12 @@ static int run_random_event(GameState *state)
     if (event_index == 0) {
         return run_symbiote_event(state);
     }
-
-    return run_mutating_forest_event(state);
+    else if (event_index == 1) {
+        return run_mutating_forest_event(state);
+    }
+    else {
+        return run_jungle_maze_event(state);
+    }
 }
 
 //카드 1장 제거 보조함수(2장 제거일경우)
@@ -241,6 +246,47 @@ static int run_mutating_forest_event(GameState *state)
         }
 
         show_max_hp_increased_screen(&state->player, 5);
+        return 1;
+    }
+
+    return 1;
+}
+
+//정글 미로 탐험 이벤트 함수
+static int run_jungle_maze_event(GameState *state)
+{
+    int choice;
+    int gold_gain;
+    int hp_loss;
+
+    if (state == NULL) {
+        return 0;
+    }
+
+    choice = show_jungle_maze_event_screen();
+
+    if (choice == 1) {
+        gold_gain = 135 + rand() % 31;
+        hp_loss = 10;
+
+        state->player.gold += gold_gain;
+        state->player.hp -= hp_loss;
+
+        if (state->player.hp < 1) {
+            state->player.hp = 1;
+        }
+
+        show_jungle_maze_result_screen(choice, gold_gain, hp_loss, &state->player);
+        return 1;
+    }
+
+    if (choice == 2) {
+        gold_gain = 35 + rand() % 31;
+        hp_loss = 0;
+
+        state->player.gold += gold_gain;
+
+        show_jungle_maze_result_screen(choice, gold_gain, hp_loss, &state->player);
         return 1;
     }
 

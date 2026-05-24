@@ -2442,3 +2442,76 @@ void show_max_hp_increased_screen(const Player *player, int amount)
     clear();
     refresh();
 }
+
+//정글 미로 탐험 이벤트 선택지
+int show_jungle_maze_event_screen(void)
+{
+    int ch;
+
+    while (1) {
+        clear();
+
+        mvprintw(2, 5, "==================== 이벤트: 정글 미로 탐험 ====================");
+        mvprintw(5, 5, "당신은 깊은 공동에서 거대한 미로를 내려다봅니다.");
+        mvprintw(6, 5, "초조해 보이는 모험가 무리가 미로 앞에서 당신에게 말을 겁니다.");
+        mvprintw(7, 5, "그들은 보물을 나눠 갖는 조건으로 함께 움직이자고 제안합니다.");
+
+        mvprintw(10, 5, "[1] 홀로 탐색한다");
+        mvprintw(11, 9, "골드 135~165를 얻습니다. 체력을 10 잃습니다.");
+        mvprintw(12, 9, "체력이 부족해도 최소 1은 남습니다.");
+
+        mvprintw(15, 5, "[2] 협력한다");
+        mvprintw(16, 9, "골드 35~65를 얻습니다.");
+
+        mvprintw(19, 5, "1 또는 2를 눌러 선택하세요.");
+
+        refresh();
+
+        ch = getch();
+
+        if (ch == '1') {
+            return 1;
+        }
+
+        if (ch == '2') {
+            return 2;
+        }
+    }
+}
+
+//정글 미로 탐험 선택지 결과
+void show_jungle_maze_result_screen(int choice, int gold_gain, int hp_loss, const Player *player)
+{
+    clear();
+
+    if (choice == 1) {
+        mvprintw(5, 5, "당신은 홀로 미로 깊숙이 들어갑니다.");
+        mvprintw(6, 5, "비정한 함정과 수호자들을 뚫고, 묵직한 전리품을 챙겼습니다.");
+    }
+    else {
+        mvprintw(5, 5, "당신은 모험가들과 협력해 미로를 통과합니다.");
+        mvprintw(6, 5, "전리품은 나누어 가졌지만, 몸은 무사합니다.");
+    }
+
+    mvprintw(9, 5, "획득 골드: %d", gold_gain);
+
+    if (hp_loss > 0) {
+        mvprintw(10, 5, "잃은 체력: %d", hp_loss);
+    }
+    else {
+        mvprintw(10, 5, "잃은 체력: 없음");
+    }
+
+    if (player != NULL) {
+        mvprintw(12, 5, "현재 골드: %d", player->gold);
+        mvprintw(13, 5, "현재 체력: %d / %d", player->hp, player->max_hp);
+    }
+
+    mvprintw(16, 5, "아무 키나 누르면 다음 층으로 이동합니다.");
+
+    refresh();
+    getch();
+
+    clear();
+    refresh();
+}

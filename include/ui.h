@@ -48,4 +48,7 @@ void show_no_attack_card_screen(void);
 int show_mutating_forest_event_screen(void);
 void show_mutating_forest_removed_screen(const Card removed_cards[], int removed_count, int lost_gold);
 void show_max_hp_increased_screen(const Player *player, int amount);
+
+int show_jungle_maze_event_screen(void);
+void show_jungle_maze_result_screen(int choice, int gold_gain, int hp_loss, const Player *player);
 #endif
