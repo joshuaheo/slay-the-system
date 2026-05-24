@@ -8,6 +8,7 @@
 static int g_shrink_effect_active = 0;
 
 static int has_active_shrink_effect(Enemy enemies[], int enemy_count);
+static void increase_bygone_effigy_slow(Enemy enemies[], int enemy_count);
 
 //카드가 몇 번 공격하는지 계산하는 함수.
 static int get_card_hit_count(const Card *card)
@@ -163,7 +164,9 @@ static void deal_damage_to_enemy(Player *player, Enemy *enemy, int damage)
     if (enemy->vulnerable > 0) {
         final_damage = final_damage * 3 / 2;
     }
-
+    if (enemy->id == ENEMY_BYGONE_EFFIGY && enemy->special_state > 0) {
+    final_damage = final_damage * (100 + enemy->special_state * 10) / 100;
+}
     if (enemy->block > 0) {
         if (enemy->block >= final_damage) {
             enemy->block -= final_damage;
@@ -442,6 +445,7 @@ int play_card(Player *player, Enemy enemies[], int enemy_count, int hand_index, 
         move_used_card(player, card);
         return 1;
     }
+    increase_bygone_effigy_slow(enemies, enemy_count);
 
     g_shrink_effect_active = has_active_shrink_effect(enemies, enemy_count);
 
@@ -517,3 +521,24 @@ static int has_active_shrink_effect(Enemy enemies[], int enemy_count)
 
     return 0;
 }
+
+//옛 시대의 우상 전용 버프 둔화 처리 함수
+static void increase_bygone_effigy_slow(Enemy enemies[], int enemy_count)
+{
+    int i;
+
+    if (enemies == NULL || enemy_count <= 0) {
+        return;
+    }
+
+    if (enemy_count > MAX_ENEMIES) {
+        enemy_count = MAX_ENEMIES;
+    }
+
+    for (i = 0; i < enemy_count; i++) {
+        if (enemies[i].id == ENEMY_BYGONE_EFFIGY && enemies[i].hp > 0) {
+            enemies[i].special_state++;
+        }
+    }
+}
+

@@ -43,6 +43,7 @@ typedef enum {
     ENEMY_CUBEX_CONSTRUCT,
     ENEMY_LEAF_SLIME,
     ENEMY_TWIG_SLIME,
+    ENEMY_BYGONE_EFFIGY,
 } EnemyId;
 
 //카드 희귀도(시작,일반,고급,희귀)

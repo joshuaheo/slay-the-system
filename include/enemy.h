@@ -13,4 +13,6 @@ void enemy_attack_player(Enemy *enemy, Player *player);
 void enemies_take_turn(Enemy enemies[], int enemy_count, Player *player);
 void init_enemy(Enemy *enemy, EnemyId id);
 
+void reset_bygone_effigy_slow(Enemy enemies[], int enemy_count);
+
 #endif

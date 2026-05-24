@@ -472,7 +472,7 @@ static void init_temp_battle_enemies(Enemy enemies[], int *enemy_count)
 
     *enemy_count = 3;
 
-    init_enemy(&enemies[0], ENEMY_TWIG_SLIME);
+    init_enemy(&enemies[0], ENEMY_BYGONE_EFFIGY);
     init_enemy(&enemies[1], ENEMY_LEAF_SLIME);
     init_enemy(&enemies[2], ENEMY_LEAF_SLIME);
 }
@@ -485,6 +485,16 @@ static const char *get_enemy_intent_text(const Enemy *enemy)
     }
 
     switch (enemy->id) {
+    case ENEMY_BYGONE_EFFIGY:
+    if (enemy->pattern_index == 0) {
+        return "수면: 아무것도 하지 않음";
+    }
+    else if (enemy->pattern_index == 1) {
+        return "깨어남: 힘 10";
+    }
+    else {
+        return "참격: 공격 13";
+    }
     case ENEMY_TWIG_SLIME:
     if (enemy->pattern_index == 0) {
         return "버린 더미에 점액투성이 1장 추가";
@@ -861,6 +871,8 @@ static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_c
     decrease_player_turn_statuses(player);
 
     discard_hand(player);
+
+    reset_bygone_effigy_slow(enemies, enemy_count);
 
     enemies_take_turn(enemies, enemy_count, player);
 

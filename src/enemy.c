@@ -35,6 +35,8 @@ static void leaf_slime_take_turn(Enemy *enemy, Player *player);
 static void twig_slime_take_turn(Enemy *enemy, Player *player);
 static int choose_next_twig_slime_action(int previous_action, int streak);
 
+static void bygone_effigy_take_turn(Enemy *enemy, Player *player);
+
 //enemy_move 초기화 함수
 static void clear_enemy_move(EnemyMove *move)
 {
@@ -180,6 +182,16 @@ void init_enemy(Enemy *enemy, EnemyId id)
     enemy->special_state = 0;
 
     switch (id) {
+    case ENEMY_BYGONE_EFFIGY:
+    strncpy(enemy->name, "옛 시대의 우상", MAX_NAME_LEN - 1);
+    enemy->name[MAX_NAME_LEN - 1] = '\0';
+    enemy->grade = ENEMY_ELITE;
+    enemy->max_hp = 127;
+    enemy->hp = enemy->max_hp;
+    enemy->damage = 13;
+    enemy->pattern_index = 0;
+    enemy->special_state = 0;
+    break;
     case ENEMY_TWIG_SLIME:
     strncpy(enemy->name, "가지 슬라임", MAX_NAME_LEN - 1);
     enemy->name[MAX_NAME_LEN - 1] = '\0';
@@ -366,6 +378,9 @@ static void enemy_take_turn(Enemy *enemy, Player *player)
     }
 
     switch (enemy->id) {
+    case ENEMY_BYGONE_EFFIGY:
+        bygone_effigy_take_turn(enemy, player);
+        break;
     case ENEMY_TWIG_SLIME:
         twig_slime_take_turn(enemy, player);
         break;
@@ -879,4 +894,51 @@ static void twig_slime_take_turn(Enemy *enemy, Player *player)
 
     enemy->special_state = action + next_streak * 10;
     enemy->pattern_index = choose_next_twig_slime_action(action, next_streak);
+}
+
+//엘리트 몬스터 옛 시대의 우상 함수
+static void bygone_effigy_take_turn(Enemy *enemy, Player *player)
+{
+    EnemyMove move;
+
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    clear_enemy_move(&move);
+
+    if (enemy->pattern_index == 0) {
+        enemy->pattern_index = 1;
+    }
+    else if (enemy->pattern_index == 1) {
+        move.strength = 10;
+        enemy->pattern_index = 2;
+        apply_enemy_move(enemy, player, &move);
+    }
+    else {
+        move.has_attack = 1;
+        move.damage = 13;
+        move.hit_count = 1;
+        apply_enemy_move(enemy, player, &move);
+    }
+}
+
+//옛 시대의 우상 둔화 초기화 함수
+void reset_bygone_effigy_slow(Enemy enemies[], int enemy_count)
+{
+    int i;
+
+    if (enemies == NULL || enemy_count <= 0) {
+        return;
+    }
+
+    if (enemy_count > MAX_ENEMIES) {
+        enemy_count = MAX_ENEMIES;
+    }
+
+    for (i = 0; i < enemy_count; i++) {
+        if (enemies[i].id == ENEMY_BYGONE_EFFIGY) {
+            enemies[i].special_state = 0;
+        }
+    }
 }
