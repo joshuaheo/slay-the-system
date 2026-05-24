@@ -38,7 +38,7 @@ static const Card card_pool[] = {
         .target = TARGET_ENEMY,
         .cost = 1,
 
-        .damage = 999,
+        .damage = 30,
         .block = 0,
 
         .strength = 0,

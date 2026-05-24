@@ -472,7 +472,7 @@ static void init_temp_battle_enemies(Enemy enemies[], int *enemy_count)
 
     *enemy_count = 3;
 
-    init_enemy(&enemies[0], ENEMY_BYRDONIS);
+    init_enemy(&enemies[0], ENEMY_TERROR_EEL);
     init_enemy(&enemies[1], ENEMY_LEAF_SLIME);
     init_enemy(&enemies[2], ENEMY_LEAF_SLIME);
 }
@@ -485,6 +485,19 @@ static const char *get_enemy_intent_text(const Enemy *enemy)
     }
 
     switch (enemy->id) {
+    case ENEMY_TERROR_EEL:
+    if (enemy->pattern_index == 3) {
+        return "기절: 아무것도 하지 않음";
+    }
+    else if (enemy->pattern_index == 2) {
+        return "공포: 취약 99";
+    }
+    else if (enemy->pattern_index == 0) {
+        return "충돌: 공격 16";
+    }
+    else {
+        return "난동부리기: 공격 3 x 3 + 활력 6";
+    }
     case ENEMY_BYRDONIS:
     if (enemy->pattern_index == 0) {
         return "물기: 공격 17";

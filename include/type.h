@@ -45,6 +45,7 @@ typedef enum {
     ENEMY_TWIG_SLIME,
     ENEMY_BYGONE_EFFIGY,
     ENEMY_BYRDONIS,
+    ENEMY_TERROR_EEL,
 } EnemyId;
 
 //카드 희귀도(시작,일반,고급,희귀)

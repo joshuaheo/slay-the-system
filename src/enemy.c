@@ -4,6 +4,8 @@
 #include "enemy.h"
 #include "card.h"
 
+//적 패텀 매크로 함수
+#if 1
 #define SLUDGE_OIL_SPRAY 0
 #define SLUDGE_SLAM      1
 #define SLUDGE_RAGE      2
@@ -12,6 +14,16 @@
 #define MAWLER_RIP_AND_TEAR 1
 #define MAWLER_ROAR 2
 
+#define TERROR_EEL_CRASH 0
+#define TERROR_EEL_THRASH 1
+#define TERROR_EEL_TERROR 2
+#define TERROR_EEL_STUN 3
+
+#define TERROR_EEL_TERROR_USED 1
+#define TERROR_EEL_VIGOR_READY 2
+#define TERROR_EEL_STUN_PENDING 4
+#define TERROR_EEL_TERROR_PENDING 8
+#endif
 //static 함수 모음
 #if 1
 static void jaw_worm_take_turn(Enemy *enemy, Player *player);
@@ -40,6 +52,8 @@ static int choose_next_twig_slime_action(int previous_action, int streak);
 static void bygone_effigy_take_turn(Enemy *enemy, Player *player);
 
 static void byrdonis_take_turn(Enemy *enemy, Player *player);
+
+static void terror_eel_take_turn(Enemy *enemy, Player *player);
 #endif
 
 //enemy_move 초기화 함수
@@ -187,6 +201,16 @@ void init_enemy(Enemy *enemy, EnemyId id)
     enemy->special_state = 0;
 
     switch (id) {
+    case ENEMY_TERROR_EEL:
+    strncpy(enemy->name, "공포 장어", MAX_NAME_LEN - 1);
+    enemy->name[MAX_NAME_LEN - 1] = '\0';
+    enemy->grade = ENEMY_ELITE;
+    enemy->max_hp = 140;
+    enemy->hp = enemy->max_hp;
+    enemy->damage = 16;
+    enemy->pattern_index = TERROR_EEL_CRASH;
+    enemy->special_state = 0;
+    break;
     case ENEMY_BYRDONIS:
     strncpy(enemy->name, "버도니스", MAX_NAME_LEN - 1);
     enemy->name[MAX_NAME_LEN - 1] = '\0';
@@ -393,6 +417,9 @@ static void enemy_take_turn(Enemy *enemy, Player *player)
     }
 
     switch (enemy->id) {
+    case ENEMY_TERROR_EEL:
+        terror_eel_take_turn(enemy, player);
+        break;
     case ENEMY_BYRDONIS:
         byrdonis_take_turn(enemy, player);
         break;
@@ -989,4 +1016,64 @@ static void byrdonis_take_turn(Enemy *enemy, Player *player)
     apply_enemy_move(enemy, player, &move);
 
     enemy->strength++;
+}
+
+//엘리트 몬스터 공포장어 함수
+static void terror_eel_take_turn(Enemy *enemy, Player *player)
+{
+    EnemyMove move;
+    int damage_bonus;
+
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    clear_enemy_move(&move);
+
+    if (enemy->special_state & TERROR_EEL_STUN_PENDING) {
+        enemy->special_state &= ~TERROR_EEL_STUN_PENDING;
+        enemy->special_state |= TERROR_EEL_TERROR_PENDING;
+        enemy->pattern_index = TERROR_EEL_TERROR;
+        return;
+    }
+
+    if (enemy->special_state & TERROR_EEL_TERROR_PENDING) {
+        move.vulnerable = 99;
+
+        enemy->special_state &= ~TERROR_EEL_TERROR_PENDING;
+        enemy->pattern_index = TERROR_EEL_CRASH;
+
+        apply_enemy_move(enemy, player, &move);
+        return;
+    }
+
+    damage_bonus = 0;
+
+    if (enemy->special_state & TERROR_EEL_VIGOR_READY) {
+        damage_bonus = 6;
+    }
+
+    if (enemy->pattern_index == TERROR_EEL_CRASH) {
+        move.has_attack = 1;
+        move.damage = 16 + damage_bonus;
+        move.hit_count = 1;
+
+        enemy->special_state &= ~TERROR_EEL_VIGOR_READY;
+        enemy->pattern_index = TERROR_EEL_THRASH;
+    }
+    else {
+        move.has_attack = 1;
+        move.damage = 3 + damage_bonus;
+        move.hit_count = 3;
+
+        enemy->special_state &= ~TERROR_EEL_VIGOR_READY;
+        enemy->pattern_index = TERROR_EEL_CRASH;
+
+        apply_enemy_move(enemy, player, &move);
+
+        enemy->special_state |= TERROR_EEL_VIGOR_READY;
+        return;
+    }
+
+    apply_enemy_move(enemy, player, &move);
 }

@@ -5,6 +5,18 @@
 #include "relic.h"
 #include "enemy.h"
 
+//공포장어용 매크로
+#if 1
+#define TERROR_EEL_CRASH 0
+#define TERROR_EEL_THRASH 1
+#define TERROR_EEL_TERROR 2
+#define TERROR_EEL_STUN 3
+
+#define TERROR_EEL_TERROR_USED 1
+#define TERROR_EEL_VIGOR_READY 2
+#define TERROR_EEL_STUN_PENDING 4
+#define TERROR_EEL_TERROR_PENDING 8
+#endif
 static int g_shrink_effect_active = 0;
 
 static int has_active_shrink_effect(Enemy enemies[], int enemy_count);
@@ -130,6 +142,34 @@ static int can_use_card_on_target(Card card, Enemy enemies[], int enemy_count, i
     return 0;
 }
 
+static void check_terror_eel_half_hp_trigger(Enemy *enemy)
+{
+    if (enemy == NULL) {
+        return;
+    }
+
+    if (enemy->id != ENEMY_TERROR_EEL) {
+        return;
+    }
+
+    if (enemy->hp <= 0) {
+        return;
+    }
+
+    if (enemy->hp * 2 > enemy->max_hp) {
+        return;
+    }
+
+    if (enemy->special_state & TERROR_EEL_TERROR_USED) {
+        return;
+    }
+
+    enemy->special_state |= TERROR_EEL_TERROR_USED;
+    enemy->special_state |= TERROR_EEL_STUN_PENDING;
+    enemy->special_state &= ~TERROR_EEL_TERROR_PENDING;
+    enemy->pattern_index = TERROR_EEL_STUN;
+}
+
 //적에게 주는 최종데미지를 계산하는 함수
 static void deal_damage_to_enemy(Player *player, Enemy *enemy, int damage)
 {
@@ -184,6 +224,7 @@ static void deal_damage_to_enemy(Player *player, Enemy *enemy, int damage)
     if (enemy->hp < 0) {
         enemy->hp = 0;
     }
+    check_terror_eel_half_hp_trigger(enemy);
 }
 
 //적에게 상태이상을 부여하는 함수
