@@ -470,11 +470,9 @@ static void init_temp_battle_enemies(Enemy enemies[], int *enemy_count)
         return;
     }
 
-    *enemy_count = 3;
+    *enemy_count = 1;
 
-    init_enemy(&enemies[0], ENEMY_TERROR_EEL);
-    init_enemy(&enemies[1], ENEMY_LEAF_SLIME);
-    init_enemy(&enemies[2], ENEMY_LEAF_SLIME);
+    init_enemy(&enemies[0], ENEMY_VANTOM);
 }
 
 //적 의도 보여주는 함수
@@ -485,6 +483,19 @@ static const char *get_enemy_intent_text(const Enemy *enemy)
     }
 
     switch (enemy->id) {
+    case ENEMY_VANTOM:
+    if (enemy->pattern_index == 0) {
+        return "잉크 투척: 공격 7";
+    }
+    else if (enemy->pattern_index == 1) {
+        return "잉크 창: 공격 6 x 2";
+    }
+    else if (enemy->pattern_index == 2) {
+        return "토막내기: 공격 27 + 부상 3장";
+    }
+    else {
+        return "준비: 힘 2";
+    }
     case ENEMY_TERROR_EEL:
     if (enemy->pattern_index == 3) {
         return "기절: 아무것도 하지 않음";
@@ -686,7 +697,20 @@ card_y = player_y + 4;
              enemies[i].weak,
              enemies[i].vulnerable,
              enemies[i].special_state);
-} else {
+}
+else if ((enemies[i].id == ENEMY_INLET || enemies[i].id == ENEMY_VANTOM) &&
+         enemies[i].special_state > 0) {
+    mvprintw(enemy_y + 1, start_x,
+             "HP %d/%d   Block %d   Str %d   Weak %d   Vul %d   Slip %d",
+             enemies[i].hp,
+             enemies[i].max_hp,
+             enemies[i].block,
+             enemies[i].strength,
+             enemies[i].weak,
+             enemies[i].vulnerable,
+             enemies[i].special_state);
+}
+else {
     mvprintw(enemy_y + 1, start_x,
              "HP %d/%d   Block %d   Str %d   Weak %d   Vul %d",
              enemies[i].hp,
@@ -696,7 +720,6 @@ card_y = player_y + 4;
              enemies[i].weak,
              enemies[i].vulnerable);
 }
-
     mvprintw(enemy_y + 2, start_x,"Intent: %s",get_enemy_intent_text(&enemies[i]));
 }
 

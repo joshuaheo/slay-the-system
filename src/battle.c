@@ -142,6 +142,7 @@ static int can_use_card_on_target(Card card, Enemy enemies[], int enemy_count, i
     return 0;
 }
 
+//공포장어 체력 50프로 처리 함수
 static void check_terror_eel_half_hp_trigger(Enemy *enemy)
 {
     if (enemy == NULL) {
@@ -216,8 +217,9 @@ static void deal_damage_to_enemy(Player *player, Enemy *enemy, int damage)
             enemy->block = 0;
         }
     }
-    if (enemy->id == ENEMY_INLET && final_damage > 0) {
+    if ((enemy->id == ENEMY_INLET || enemy->id == ENEMY_VANTOM) &&enemy->special_state > 0 &&final_damage > 0) {
     final_damage = 1;
+    enemy->special_state--;
 }
     enemy->hp -= final_damage;
 

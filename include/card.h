@@ -14,4 +14,5 @@ void draw_cards(Player *player, int count);
 void discard_hand(Player *player);
 Card create_goop_card(void);
 int add_card_to_discard(Player *player, Card card);
+Card create_wound_card(void);
 #endif

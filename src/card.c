@@ -755,3 +755,36 @@ int add_card_to_discard(Player *player, Card card)
 
     return 1;
 }
+
+//부상 카드 생성 함수
+Card create_wound_card(void)
+{
+    Card card;
+
+    memset(&card, 0, sizeof(Card));
+
+    strncpy(card.name, "부상", MAX_NAME_LEN - 1);
+    card.name[MAX_NAME_LEN - 1] = '\0';
+
+    strncpy(card.description, "사용할 수 없습니다.", sizeof(card.description) - 1);
+    card.description[sizeof(card.description) - 1] = '\0';
+
+    card.type = CARD_STATUS;
+    card.rarity = CARD_COMMON;
+    card.target = TARGET_SELF;
+    card.cost = -1;
+
+    card.damage = 0;
+    card.block = 0;
+    card.strength = 0;
+    card.weak = 0;
+    card.vulnerable = 0;
+    card.draw = 0;
+    card.energy = 0;
+    card.hp_loss = 0;
+    card.exhaust = 0;
+    card.hit_count = 0;
+    card.special = SPECIAL_NONE;
+
+    return card;
+}

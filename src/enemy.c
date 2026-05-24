@@ -54,6 +54,8 @@ static void bygone_effigy_take_turn(Enemy *enemy, Player *player);
 static void byrdonis_take_turn(Enemy *enemy, Player *player);
 
 static void terror_eel_take_turn(Enemy *enemy, Player *player);
+
+static void vantom_take_turn(Enemy *enemy, Player *player);
 #endif
 
 //enemy_move 초기화 함수
@@ -201,6 +203,16 @@ void init_enemy(Enemy *enemy, EnemyId id)
     enemy->special_state = 0;
 
     switch (id) {
+    case ENEMY_VANTOM:
+    strncpy(enemy->name, "밴텀", MAX_NAME_LEN - 1);
+    enemy->name[MAX_NAME_LEN - 1] = '\0';
+    enemy->grade = ENEMY_BOSS;
+    enemy->max_hp = 173;
+    enemy->hp = enemy->max_hp;
+    enemy->damage = 7;
+    enemy->pattern_index = 0;
+    enemy->special_state = 8;
+    break;
     case ENEMY_TERROR_EEL:
     strncpy(enemy->name, "공포 장어", MAX_NAME_LEN - 1);
     enemy->name[MAX_NAME_LEN - 1] = '\0';
@@ -270,7 +282,7 @@ void init_enemy(Enemy *enemy, EnemyId id)
     enemy->hp = enemy->max_hp;
     enemy->damage = 3;
     enemy->pattern_index = 1;
-    enemy->special_state = 0;
+    enemy->special_state = 1;
     break;
     case ENEMY_MAWLER:
     strncpy(enemy->name, "장수아귀", MAX_NAME_LEN - 1);
@@ -417,6 +429,9 @@ static void enemy_take_turn(Enemy *enemy, Player *player)
     }
 
     switch (enemy->id) {
+    case ENEMY_VANTOM:
+    vantom_take_turn(enemy, player);
+    break;
     case ENEMY_TERROR_EEL:
         terror_eel_take_turn(enemy, player);
         break;
@@ -1075,5 +1090,61 @@ static void terror_eel_take_turn(Enemy *enemy, Player *player)
         return;
     }
 
+    apply_enemy_move(enemy, player, &move);
+}
+
+//보스 밴텀 함수
+static void vantom_take_turn(Enemy *enemy, Player *player)
+{
+    EnemyMove move;
+    Card wound;
+    int i;
+
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    clear_enemy_move(&move);
+
+    if (enemy->pattern_index == 0) {
+        move.has_attack = 1;
+        move.damage = 7;
+        move.hit_count = 1;
+
+        enemy->pattern_index = 1;
+        apply_enemy_move(enemy, player, &move);
+        return;
+    }
+
+    if (enemy->pattern_index == 1) {
+        move.has_attack = 1;
+        move.damage = 6;
+        move.hit_count = 2;
+
+        enemy->pattern_index = 2;
+        apply_enemy_move(enemy, player, &move);
+        return;
+    }
+
+    if (enemy->pattern_index == 2) {
+    move.has_attack = 1;
+    move.damage = 27;
+    move.hit_count = 1;
+
+    apply_enemy_move(enemy, player, &move);
+
+    wound = create_wound_card();
+
+    for (i = 0; i < 3; i++) {
+        add_card_to_discard(player, wound);
+    }
+
+    enemy->pattern_index = 3;
+    return;
+}
+
+    move.strength = 2;
+
+    enemy->pattern_index = 0;
     apply_enemy_move(enemy, player, &move);
 }
