@@ -254,7 +254,7 @@ void init_enemy(Enemy *enemy, EnemyId id)
     enemy->special_state = -1;
     break;
     case ENEMY_LEAF_SLIME:
-    strncpy(enemy->name, "나뭇잎 슬라임 중", MAX_NAME_LEN - 1);
+    strncpy(enemy->name, "나뭇잎 슬라임", MAX_NAME_LEN - 1);
     enemy->name[MAX_NAME_LEN - 1] = '\0';
     enemy->grade = ENEMY_NORMAL;
     enemy->max_hp = 32 + rand() % 4;
@@ -327,17 +327,6 @@ void init_enemy(Enemy *enemy, EnemyId id)
         enemy->hp = 56;
         enemy->damage = 4;
         break;    
-    case ENEMY_SLIME:
-        enemy->grade = ENEMY_NORMAL;
-
-        strncpy(enemy->name, "슬라임", MAX_NAME_LEN - 1);
-        enemy->name[MAX_NAME_LEN - 1] = '\0';
-
-        enemy->max_hp = 30;
-        enemy->hp = 30;
-        enemy->damage = 6;
-        break;
-
     case ENEMY_JAW_WORM:
         enemy->grade = ENEMY_NORMAL;
 

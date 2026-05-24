@@ -14,13 +14,13 @@
 #include "shop.h"
 #include "map.h"
 
+#if 1
 static void show_card_pile_screen(const char *title,const Card *cards,int count,int reverse_order);
 
 static int get_display_hand_count(const Player *player, int max_display_hand);
 static void normalize_selected_index(int *selected, int hand_count);
 static void show_battle_message(int y, int x, const char *message);
 
-static void init_temp_battle_enemies(Enemy enemies[], int *enemy_count);
 static const char *get_enemy_intent_text(const Enemy *enemy);
 
 static void normalize_target_index(int *target_index,Enemy enemies[],int enemy_count);
@@ -35,6 +35,13 @@ static BattleResult handle_play_selected_card(GameState *state,Enemy enemies[],i
 static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_count,int message_y,int message_x);
 static int has_active_shrink_effect_for_ui(Enemy enemies[], int enemy_count);
 
+static void init_boss_enemies(Enemy enemies[], int *enemy_count);
+static void init_elite_enemies(Enemy enemies[], int *enemy_count);
+static void init_normal_enemies(int floor,Enemy enemies[], int *enemy_count);
+static void init_start_normal_enemies(Enemy enemies[], int *enemy_count);
+static void init_later_normal_enemies(Enemy enemies[], int *enemy_count);
+static void init_battle_enemies(StageType stage,int floor, Enemy enemies[], int *enemy_count);
+#endif
 //ncurses 시작 함수
 void init_ui(void) {
     setlocale(LC_ALL, "");
@@ -300,7 +307,7 @@ static void print_relic_summary(const Player *player)
 }
 
 //임시 전투화면 출력 함수
-BattleResult show_temp_battle_screen(GameState *state)
+BattleResult show_temp_battle_screen(GameState *state, StageType stage)
 {
     Player *player;
     BattleResult final_result = BATTLE_CONTINUE;
@@ -327,7 +334,7 @@ BattleResult show_temp_battle_screen(GameState *state)
 
     player = &state->player;
 
-    init_temp_battle_enemies(enemies, &enemy_count);
+    init_battle_enemies(stage,state->floor, enemies, &enemy_count);
     apply_relics_on_battle_start(player);
 
     while (1) {
@@ -463,16 +470,193 @@ static void show_battle_message(int y, int x, const char *message)
     getch();
 }
 
-//적을 초기화하는 함수
-static void init_temp_battle_enemies(Enemy enemies[], int *enemy_count)
+//보스 설정 함수
+static void init_boss_enemies(Enemy enemies[], int *enemy_count)
 {
     if (enemies == NULL || enemy_count == NULL) {
         return;
     }
 
     *enemy_count = 1;
-
     init_enemy(&enemies[0], ENEMY_VANTOM);
+}
+
+//랜덤 엘리트 함수
+static void init_elite_enemies(Enemy enemies[], int *enemy_count)
+{
+    int random_elite;
+
+    if (enemies == NULL || enemy_count == NULL) {
+        return;
+    }
+
+    *enemy_count = 1;
+
+    random_elite = rand() % 3;
+
+    if (random_elite == 0) {
+        init_enemy(&enemies[0], ENEMY_BYGONE_EFFIGY);
+    }
+    else if (random_elite == 1) {
+        init_enemy(&enemies[0], ENEMY_BYRDONIS);
+    }
+    else {
+        init_enemy(&enemies[0], ENEMY_TERROR_EEL);
+    }
+}
+
+static void init_start_normal_enemies(Enemy enemies[], int *enemy_count)
+{
+    int encounter;
+
+    if (enemies == NULL || enemy_count == NULL) {
+        return;
+    }
+
+    encounter = rand() % 6;
+
+    if (encounter == 0) {
+        *enemy_count = 1;
+        init_enemy(&enemies[0], ENEMY_JAW_WORM);
+    }
+    else if (encounter == 1) {
+        *enemy_count = 1;
+        init_enemy(&enemies[0], ENEMY_SHRINKER_BEETLE);
+    }
+    else if (encounter == 2) {
+        *enemy_count = 1;
+        init_enemy(&enemies[0], ENEMY_FUZZY_WURM_CRAWLER);
+    }
+    else if (encounter == 3) {
+        *enemy_count = 1;
+        init_enemy(&enemies[0], ENEMY_SLUDGE_SPINNER);
+    }
+    else if (encounter == 4) {
+        *enemy_count = 1;
+        init_enemy(&enemies[0], ENEMY_SEAPUNK);
+    }
+    else {
+        *enemy_count = 2;
+        init_enemy(&enemies[0], ENEMY_LEAF_SLIME);
+        init_enemy(&enemies[1], ENEMY_TWIG_SLIME);
+    }
+}
+
+static void init_later_normal_enemies(Enemy enemies[], int *enemy_count)
+{
+    int encounter;
+
+    if (enemies == NULL || enemy_count == NULL) {
+        return;
+    }
+
+    encounter = rand() % 14;
+
+    if (encounter == 0) {
+        *enemy_count = 1;
+        init_enemy(&enemies[0], ENEMY_MAWLER);
+    }
+    else if (encounter == 1) {
+        *enemy_count = 3;
+        init_enemy(&enemies[0], ENEMY_INLET);
+        init_enemy(&enemies[1], ENEMY_INLET);
+        init_enemy(&enemies[2], ENEMY_INLET);
+    }
+    else if (encounter == 2) {
+        *enemy_count = 2;
+        init_enemy(&enemies[0], ENEMY_JAW_WORM);
+        init_enemy(&enemies[1], ENEMY_JAW_WORM);
+    }
+    else if (encounter == 3) {
+        *enemy_count = 3;
+        init_enemy(&enemies[0], ENEMY_LEAF_SLIME);
+        init_enemy(&enemies[1], ENEMY_LEAF_SLIME);
+        init_enemy(&enemies[2], ENEMY_TWIG_SLIME);
+    }
+    else if (encounter == 4) {
+        *enemy_count = 1;
+        init_enemy(&enemies[0], ENEMY_CUBEX_CONSTRUCT);
+    }
+    else if (encounter == 5) {
+        *enemy_count = 2;
+        init_enemy(&enemies[0], ENEMY_SHRINKER_BEETLE);
+        init_enemy(&enemies[1], ENEMY_FUZZY_WURM_CRAWLER);
+    }
+    else if (encounter == 6) {
+        *enemy_count = 3;
+        init_enemy(&enemies[0], ENEMY_INLET);
+        init_enemy(&enemies[1], ENEMY_INLET);
+        init_enemy(&enemies[2], ENEMY_SLUDGE_SPINNER);
+    }
+    else if (encounter == 7) {
+        *enemy_count = 2;
+        init_enemy(&enemies[0], ENEMY_JAW_WORM);
+        init_enemy(&enemies[1], ENEMY_FUZZY_WURM_CRAWLER);
+    }
+    else if (encounter == 8) {
+        *enemy_count = 2;
+        init_enemy(&enemies[0], ENEMY_SHRINKER_BEETLE);
+        init_enemy(&enemies[1], ENEMY_JAW_WORM);
+    }
+    else if (encounter == 9) {
+        *enemy_count = 2;
+        init_enemy(&enemies[0], ENEMY_FUZZY_WURM_CRAWLER);
+        init_enemy(&enemies[1], ENEMY_FUZZY_WURM_CRAWLER);
+    }
+    else if (encounter == 10) {
+        *enemy_count = 3;
+        init_enemy(&enemies[0], ENEMY_INLET);
+        init_enemy(&enemies[1], ENEMY_INLET);
+        init_enemy(&enemies[2], ENEMY_SEAPUNK);
+    }
+    else if (encounter == 11) {
+        *enemy_count = 2;
+        init_enemy(&enemies[0], ENEMY_JAW_WORM);
+        init_enemy(&enemies[1], ENEMY_SEAPUNK);
+    }
+    else if (encounter == 12) {
+        *enemy_count = 2;
+        init_enemy(&enemies[0], ENEMY_SHRINKER_BEETLE);
+        init_enemy(&enemies[1], ENEMY_SLUDGE_SPINNER);
+    }
+    else {
+        *enemy_count = 3;
+        init_enemy(&enemies[0], ENEMY_TWIG_SLIME);
+        init_enemy(&enemies[1], ENEMY_INLET);
+        init_enemy(&enemies[2], ENEMY_INLET);
+    }
+}
+
+static void init_normal_enemies(int floor, Enemy enemies[], int *enemy_count)
+{
+    if (enemies == NULL || enemy_count == NULL) {
+        return;
+    }
+
+    if (floor <= 3) {
+        init_start_normal_enemies(enemies, enemy_count);
+    }
+    else {
+        init_later_normal_enemies(enemies, enemy_count);
+    }
+}
+
+//스테이지 별 적 설정 함수
+static void init_battle_enemies(StageType stage,int floor, Enemy enemies[], int *enemy_count)
+{
+    if (enemies == NULL || enemy_count == NULL) {
+        return;
+    }
+
+    if (stage == STAGE_BOSS) {
+        init_boss_enemies(enemies, enemy_count);
+    }
+    else if (stage == STAGE_ELITE) {
+        init_elite_enemies(enemies, enemy_count);
+    }
+    else {
+        init_normal_enemies(floor,enemies, enemy_count);
+    }
 }
 
 //적 의도 보여주는 함수

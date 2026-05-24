@@ -169,7 +169,7 @@ int run_current_stage(GameState *state) {
     case STAGE_ELITE:
     case STAGE_BOSS:
         prepare_battle_deck(&state->player);
-        battle_result = show_temp_battle_screen(state);
+        battle_result = show_temp_battle_screen(state, stage);
 
         if (battle_result == BATTLE_WIN) {
             if (stage == STAGE_BOSS || state->floor == MAX_FLOOR) {
