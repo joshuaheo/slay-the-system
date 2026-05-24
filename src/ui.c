@@ -2113,7 +2113,7 @@ int show_symbiote_event_screen(void)
         mvprintw(11, 9, "[오염] 카드는 피해량이 50%% 증가하지만, 사용할 때 체력을 2 잃습니다.");
 
         mvprintw(14, 5, "[2] 불로 태워 죽인다.");
-        mvprintw(15, 9, "카드 1장을 선택해 덱에서 제거합니다.");
+        mvprintw(15, 9, "카드 1장을 선택해 덱에서 제거합니다. (10장이하인경우 불가합니다)");
 
         mvprintw(18, 5, "1 또는 2를 눌러 선택하세요.");
 
@@ -2353,4 +2353,92 @@ static int make_card_hand_display_name(const char *src, char *dest, int dest_siz
     }
 
     return corrupted;
+}
+
+//변성체의 숲 화면
+int show_mutating_forest_event_screen(void)
+{
+    int ch;
+
+    while (1) {
+        clear();
+
+        mvprintw(2, 5, "==================== 이벤트: 변성체의 숲 ====================");
+        mvprintw(5, 5, "당신은 결정화된 나무들로 가득한 숲에 들어섭니다.");
+        mvprintw(6, 5, "나무들이 격렬하게 떨리기 시작하고, 변성체들이 당신에게 말을 걸어옵니다.");
+
+        mvprintw(9, 5, "[1] 무리 (해당 선택지는 카드가 12장 이상인경우 정상 작동합니다.)");
+        mvprintw(10, 9, "모든 골드를 잃습니다. 카드를 최대 2장 제거합니다.");
+        mvprintw(11, 9, "카드 제거를 취소해도 잃은 골드는 돌아오지 않습니다.");
+
+        mvprintw(14, 5, "[2] 외톨이");
+        mvprintw(15, 9, "최대 체력을 5 얻습니다.");
+
+        mvprintw(18, 5, "1 또는 2를 눌러 선택하세요.");
+
+        refresh();
+
+        ch = getch();
+
+        if (ch == '1') {
+            return 1;
+        }
+
+        if (ch == '2') {
+            return 2;
+        }
+    }
+}
+
+//변성체의 숲 1번 선택지
+void show_mutating_forest_removed_screen(const Card removed_cards[], int removed_count, int lost_gold)
+{
+    clear();
+
+    mvprintw(5, 5, "변천체들이 당신의 주머니와 기억을 뒤흔듭니다.");
+    mvprintw(7, 5, "잃은 골드: %d", lost_gold);
+
+    if (removed_count <= 0) {
+        mvprintw(9, 5, "제거한 카드가 없습니다.");
+    }
+    else {
+        mvprintw(9, 5, "제거한 카드:");
+
+        if (removed_count >= 1) {
+            mvprintw(10, 7, "- %s", removed_cards[0].name);
+        }
+
+        if (removed_count >= 2) {
+            mvprintw(11, 7, "- %s", removed_cards[1].name);
+        }
+    }
+
+    mvprintw(14, 5, "아무 키나 누르면 다음 층으로 이동합니다.");
+
+    refresh();
+    getch();
+
+    clear();
+    refresh();
+}
+
+//변성체의 숲 2번 선택지
+void show_max_hp_increased_screen(const Player *player, int amount)
+{
+    clear();
+
+    mvprintw(5, 5, "변천체 하나가 당신에게 조용히 다가옵니다.");
+    mvprintw(7, 5, "최대 체력이 %d 증가했습니다.", amount);
+
+    if (player != NULL) {
+        mvprintw(9, 5, "현재 체력: %d / %d", player->hp, player->max_hp);
+    }
+
+    mvprintw(12, 5, "아무 키나 누르면 다음 층으로 이동합니다.");
+
+    refresh();
+    getch();
+
+    clear();
+    refresh();
 }

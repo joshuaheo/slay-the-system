@@ -44,4 +44,8 @@ int show_symbiote_event_screen(void);
 int show_attack_card_select_screen(const Player *player);
 void show_card_corrupted_screen(const Card *card);
 void show_no_attack_card_screen(void);
+
+int show_mutating_forest_event_screen(void);
+void show_mutating_forest_removed_screen(const Card removed_cards[], int removed_count, int lost_gold);
+void show_max_hp_increased_screen(const Player *player, int amount);
 #endif
