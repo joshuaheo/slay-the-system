@@ -12,6 +12,8 @@
 #define MAWLER_RIP_AND_TEAR 1
 #define MAWLER_ROAR 2
 
+//static 함수 모음
+#if 1
 static void jaw_worm_take_turn(Enemy *enemy, Player *player);
 static void seapunk_take_turn(Enemy *enemy, Player *player);
 static void fuzzy_wurm_crawler_take_turn(Enemy *enemy, Player *player);
@@ -36,6 +38,9 @@ static void twig_slime_take_turn(Enemy *enemy, Player *player);
 static int choose_next_twig_slime_action(int previous_action, int streak);
 
 static void bygone_effigy_take_turn(Enemy *enemy, Player *player);
+
+static void byrdonis_take_turn(Enemy *enemy, Player *player);
+#endif
 
 //enemy_move 초기화 함수
 static void clear_enemy_move(EnemyMove *move)
@@ -182,6 +187,16 @@ void init_enemy(Enemy *enemy, EnemyId id)
     enemy->special_state = 0;
 
     switch (id) {
+    case ENEMY_BYRDONIS:
+    strncpy(enemy->name, "버도니스", MAX_NAME_LEN - 1);
+    enemy->name[MAX_NAME_LEN - 1] = '\0';
+    enemy->grade = ENEMY_ELITE;
+    enemy->max_hp = 81 + rand() % 4;
+    enemy->hp = enemy->max_hp;
+    enemy->damage = 17;
+    enemy->pattern_index = 0;
+    enemy->special_state = 0;
+    break;
     case ENEMY_BYGONE_EFFIGY:
     strncpy(enemy->name, "옛 시대의 우상", MAX_NAME_LEN - 1);
     enemy->name[MAX_NAME_LEN - 1] = '\0';
@@ -378,6 +393,9 @@ static void enemy_take_turn(Enemy *enemy, Player *player)
     }
 
     switch (enemy->id) {
+    case ENEMY_BYRDONIS:
+        byrdonis_take_turn(enemy, player);
+        break;
     case ENEMY_BYGONE_EFFIGY:
         bygone_effigy_take_turn(enemy, player);
         break;
@@ -941,4 +959,34 @@ void reset_bygone_effigy_slow(Enemy enemies[], int enemy_count)
             enemies[i].special_state = 0;
         }
     }
+}
+
+//엘리트 몬스터 새도니스 함수
+static void byrdonis_take_turn(Enemy *enemy, Player *player)
+{
+    EnemyMove move;
+
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    clear_enemy_move(&move);
+
+    if (enemy->pattern_index == 0) {
+        move.has_attack = 1;
+        move.damage = 17;
+        move.hit_count = 1;
+
+        enemy->pattern_index = 1;
+    } else {
+        move.has_attack = 1;
+        move.damage = 3;
+        move.hit_count = 3;
+
+        enemy->pattern_index = 0;
+    }
+
+    apply_enemy_move(enemy, player, &move);
+
+    enemy->strength++;
 }

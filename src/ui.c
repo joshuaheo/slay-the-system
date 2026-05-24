@@ -472,7 +472,7 @@ static void init_temp_battle_enemies(Enemy enemies[], int *enemy_count)
 
     *enemy_count = 3;
 
-    init_enemy(&enemies[0], ENEMY_BYGONE_EFFIGY);
+    init_enemy(&enemies[0], ENEMY_BYRDONIS);
     init_enemy(&enemies[1], ENEMY_LEAF_SLIME);
     init_enemy(&enemies[2], ENEMY_LEAF_SLIME);
 }
@@ -485,6 +485,12 @@ static const char *get_enemy_intent_text(const Enemy *enemy)
     }
 
     switch (enemy->id) {
+    case ENEMY_BYRDONIS:
+    if (enemy->pattern_index == 0) {
+        return "물기: 공격 17";
+    } else {
+        return "쪼기: 공격 3 x 3";
+    }
     case ENEMY_BYGONE_EFFIGY:
     if (enemy->pattern_index == 0) {
         return "수면: 아무것도 하지 않음";
