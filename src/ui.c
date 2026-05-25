@@ -2662,3 +2662,79 @@ void show_sunken_treasury_result_screen(int choice, int gold_gain, const Card *a
     clear();
     refresh();
 }
+
+//스테이지 선택 함수
+StageType show_stage_choice_screen(int floor, const MapFloor *map_floor)
+{
+    int selected;
+    int ch;
+    int i;
+
+    if (map_floor == NULL || map_floor->choice_count <= 0) {
+        show_current_stage_screen(floor, STAGE_ENEMY);
+        return STAGE_ENEMY;
+    }
+
+    if (map_floor->choice_count == 1) {
+        show_current_stage_screen(floor, map_floor->choices[0]);
+        return map_floor->choices[0];
+    }
+
+    selected = 0;
+
+    while (1) {
+        clear();
+
+        mvprintw(3, 5, "==================== 스테이지 선택 ====================");
+        mvprintw(5, 5, "현재 층: %d층", floor);
+        mvprintw(7, 5, "진행할 스테이지를 선택하세요.");
+
+        for (i = 0; i < map_floor->choice_count; i++) {
+            if (i == selected) {
+                attron(A_REVERSE);
+            }
+
+            mvprintw(10 + i * 2, 7, "[%d] %s",
+                     i + 1,
+                     get_stage_type_name(map_floor->choices[i]));
+
+            if (i == selected) {
+                attroff(A_REVERSE);
+            }
+        }
+
+        mvprintw(16, 5, "W/S 또는 ↑/↓ 이동, Enter 선택");
+        mvprintw(17, 5, "숫자 키 1~%d로도 선택할 수 있습니다.", map_floor->choice_count);
+
+        refresh();
+
+        ch = getch();
+
+        if (ch == KEY_UP || ch == 'w' || ch == 'W') {
+            selected--;
+
+            if (selected < 0) {
+                selected = map_floor->choice_count - 1;
+            }
+        }
+        else if (ch == KEY_DOWN || ch == 's' || ch == 'S') {
+            selected++;
+
+            if (selected >= map_floor->choice_count) {
+                selected = 0;
+            }
+        }
+        else if (ch == '\n' || ch == KEY_ENTER || ch == 10 || ch == 13) {
+            clear();
+            refresh();
+            return map_floor->choices[selected];
+        }
+        else if (ch >= '1' && ch < '1' + map_floor->choice_count) {
+            selected = ch - '1';
+
+            clear();
+            refresh();
+            return map_floor->choices[selected];
+        }
+    }
+}

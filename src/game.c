@@ -150,6 +150,7 @@ int handle_battle_result(GameState *state, BattleResult result) {
 
 //현재 스테이지 타입에 따라 작동하는 함수
 int run_current_stage(GameState *state) {
+    const MapFloor *map_floor;
     StageType stage;
     BattleResult battle_result;
 
@@ -161,9 +162,13 @@ int run_current_stage(GameState *state) {
         return 0;
     }
 
-    stage = get_default_stage_type(state->floor);
+    map_floor = get_map_floor(state->floor);
 
-    show_current_stage_screen(state->floor, stage);
+    if (map_floor == NULL) {
+        return 0;
+    }
+
+    stage = show_stage_choice_screen(state->floor, map_floor);
 
     switch (stage) {
     case STAGE_ENEMY:
@@ -197,8 +202,6 @@ int run_current_stage(GameState *state) {
         return run_chest_stage(state);
     case STAGE_EVENT:
         return run_event_stage(state);
-
-        return 1;
 
     default:
         return 0;

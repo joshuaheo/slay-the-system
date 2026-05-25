@@ -57,4 +57,6 @@ void show_amalgamator_result_screen(const Card *new_card, const char *removed_na
 
 int show_sunken_treasury_event_screen(void);
 void show_sunken_treasury_result_screen(int choice, int gold_gain, const Card *added_card, const Player *player);
+
+StageType show_stage_choice_screen(int floor, const MapFloor *map_floor);
 #endif
