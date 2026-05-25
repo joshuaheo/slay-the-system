@@ -50,7 +50,7 @@ void init_new_game(GameState *state, const char *username) {
     player->gold = 999;
 
     player->relic_count = 0;
-    add_relic_to_player(player, get_relic_from_pool(6));
+    add_relic_to_player(player, get_relic_from_pool(13));
 
     player->max_energy = 3;
     player->energy = 3;

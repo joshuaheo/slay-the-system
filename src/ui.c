@@ -32,7 +32,7 @@ static void draw_temp_battle_screen(GameState *state,Enemy enemies[],int enemy_c
 static void show_battle_inventory_menu(Player *player);
 
 static BattleResult handle_play_selected_card(GameState *state,Enemy enemies[],int enemy_count,int selected,int target_index,int message_y,int message_x);
-static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_count,int message_y,int message_x);
+static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_count,int message_y,int message_x,int *turn_number);
 static int has_active_shrink_effect_for_ui(Enemy enemies[], int enemy_count);
 
 static void init_boss_enemies(Enemy enemies[], int *enemy_count);
@@ -329,6 +329,7 @@ BattleResult show_temp_battle_screen(GameState *state, StageType stage)
     int ch;
     int start_y;
     int start_x;
+    int turn_number = 1;
 
     if (state == NULL) {
         return BATTLE_CONTINUE;
@@ -336,8 +337,16 @@ BattleResult show_temp_battle_screen(GameState *state, StageType stage)
 
     player = &state->player;
 
-    init_battle_enemies(stage,state->floor, enemies, &enemy_count);
-    apply_relics_on_battle_start(player);
+    init_battle_enemies(stage, state->floor, enemies, &enemy_count);
+    apply_relics_on_battle_start(player, enemies, enemy_count);
+    apply_relics_on_turn_start(player, enemies, enemy_count, turn_number);
+
+    final_result = check_battle_result(player, enemies, enemy_count);
+
+if (final_result != BATTLE_CONTINUE) {
+    show_battle_result_message(final_result);
+    return final_result;
+}
 
     while (1) {
         start_y = (LINES - battle_height) / 3;
@@ -400,7 +409,7 @@ BattleResult show_temp_battle_screen(GameState *state, StageType stage)
             show_battle_inventory_menu(player);
         }
         else if (ch == 'e' || ch == 'E') {
-            battle_result = handle_end_turn(state,enemies,enemy_count,start_y + 27,start_x);
+            battle_result = handle_end_turn(state,enemies,enemy_count,start_y + 27,start_x,&turn_number);
 
             if (battle_result != BATTLE_CONTINUE) {
                 final_result = battle_result;
@@ -1096,7 +1105,7 @@ static BattleResult handle_play_selected_card(GameState *state,Enemy enemies[],i
 }
 
 //턴종료 처리함수
-static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_count,int message_y,int message_x)
+static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_count,int message_y,int message_x,int* turn_number)
 {
     Player *player;
     BattleResult battle_result;
@@ -1129,8 +1138,20 @@ static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_c
     }
 
     player->block = 0;
-    player->energy = player->max_energy;
-    draw_cards(player, 5);
+player->energy = player->max_energy;
+
+if (turn_number != NULL) {
+    (*turn_number)++;
+    apply_relics_on_turn_start(player, enemies, enemy_count, *turn_number);
+}
+
+battle_result = check_battle_result(player, enemies, enemy_count);
+
+if (battle_result != BATTLE_CONTINUE) {
+    return battle_result;
+}
+
+draw_cards(player, 5);
 
     return BATTLE_CONTINUE;
 }
