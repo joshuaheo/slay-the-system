@@ -15,6 +15,7 @@ void discard_hand(Player *player);
 Card create_goop_card(void);
 int add_card_to_discard(Player *player, Card card);
 Card create_wound_card(void);
+Card create_greed_card(void);
 
 //카드 인덱스
 enum {

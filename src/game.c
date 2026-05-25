@@ -251,13 +251,14 @@ static int run_rest_stage(GameState *state)
                 continue;
             }
 
-            removed_card = state->player.owned_deck[remove_index];
+removed_card = state->player.owned_deck[remove_index];
 
-            if (!remove_card_from_deck(&state->player, remove_index)) {
-                return 0;
-            }
+if (!remove_card_from_deck(&state->player, remove_index)) {
+    show_card_remove_unavailable_screen();
+    continue;
+}
 
-            show_card_removed_screen(&removed_card);
+show_card_removed_screen(&removed_card);
 
             state->floor++;
 

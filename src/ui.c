@@ -2589,3 +2589,76 @@ void show_amalgamator_result_screen(const Card *new_card, const char *removed_na
     clear();
     refresh();
 }
+
+//가라앉은 보물 이벤트
+int show_sunken_treasury_event_screen(void)
+{
+    int ch;
+
+    while (1) {
+        clear();
+
+        mvprintw(2, 5, "==================== 이벤트: 가라앉은 보물 ====================");
+        mvprintw(5, 5, "길을 따라가던 당신은 일부가 묻힌 장고를 발견합니다.");
+        mvprintw(6, 5, "상자는 두 개가 있지만, 무거운 열쇠는 하나뿐입니다.");
+
+        mvprintw(9, 5, "첫 번째 상자는 흔들 때 딸랑이는 소리가 납니다.");
+        mvprintw(10, 5, "두 번째 상자는 거대하고 화려하지만, 명백히 수상합니다.");
+
+        mvprintw(13, 5, "[1] 첫 번째 상자");
+        mvprintw(14, 9, "골드 52~67을 얻습니다.");
+
+        mvprintw(17, 5, "[2] 두 번째 상자");
+        mvprintw(18, 9, "골드 303~363을 얻습니다. 탐욕 카드를 얻습니다.");
+        mvprintw(19, 9, "탐욕은 사용할 수 없고 제거할 수 없습니다.");
+
+        mvprintw(22, 5, "1 또는 2를 눌러 선택하세요.");
+
+        refresh();
+
+        ch = getch();
+
+        if (ch == '1') {
+            return 1;
+        }
+
+        if (ch == '2') {
+            return 2;
+        }
+    }
+}
+
+//가라앉은 보물 이벤트 결과화면
+void show_sunken_treasury_result_screen(int choice, int gold_gain, const Card *added_card, const Player *player)
+{
+    clear();
+
+    if (choice == 1) {
+        mvprintw(5, 5, "당신은 작은 상자를 열었습니다.");
+        mvprintw(6, 5, "낡은 금화들이 기분 좋은 소리를 내며 쏟아집니다.");
+    }
+    else {
+        mvprintw(5, 5, "당신은 거대한 상자를 열었습니다.");
+        mvprintw(6, 5, "눈부신 골드가 쏟아지지만, 끈적한 욕망이 손끝에 달라붙습니다.");
+    }
+
+    mvprintw(9, 5, "획득 골드: %d", gold_gain);
+
+    if (added_card != NULL) {
+        mvprintw(11, 5, "획득한 카드: %s", added_card->name);
+        mvprintw(12, 5, "%s", added_card->description);
+    }
+
+    if (player != NULL) {
+        mvprintw(14, 5, "현재 골드: %d", player->gold);
+        mvprintw(15, 5, "현재 덱 카드 수: %d", player->owned_deck_count);
+    }
+
+    mvprintw(18, 5, "아무 키나 누르면 다음 층으로 이동합니다.");
+
+    refresh();
+    getch();
+
+    clear();
+    refresh();
+}

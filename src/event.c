@@ -6,12 +6,13 @@
 #include "ui.h"
 #include "card.h"
 
-#define EVENT_COUNT 4
+#define EVENT_COUNT 5
 
 #define EVENT_SYMBIOTE 0
 #define EVENT_MUTATING_FOREST 1
 #define EVENT_JUNGLE_MAZE 2
 #define EVENT_AMALGAMATOR 3
+#define EVENT_SUNKEN_TREASURY 4
 
 static int run_random_event(GameState *state);
 static int run_mutating_forest_event(GameState *state);
@@ -30,7 +31,7 @@ static int run_amalgamator_event(GameState *state);
 static int can_run_amalgamator_event(const Player *player);
 static int count_cards_by_name_prefix(const Player *player, const char *prefix);
 static int remove_first_card_by_name_prefix(Player *player, const char *prefix);
-static int add_card_to_owned_deck(Player *player, Card card);
+static int run_sunken_treasury_event(GameState *state);
 
 //공격카드에 오염을 추가하는 함수
 static int has_attack_card_to_corrupt(const Player *player)
@@ -316,6 +317,7 @@ static int run_jungle_maze_event(GameState *state)
     return 1;
 }
 
+//이벤트 가능한지 확인
 static int is_event_available(const GameState *state, int event_id)
 {
     if (state == NULL) {
@@ -329,6 +331,7 @@ static int is_event_available(const GameState *state, int event_id)
     return 1;
 }
 
+//이벤트 실행 함수
 static int run_event_by_id(GameState *state, int event_id)
 {
     if (state == NULL) {
@@ -347,10 +350,14 @@ static int run_event_by_id(GameState *state, int event_id)
     else if (event_id == EVENT_AMALGAMATOR) {
         return run_amalgamator_event(state);
     }
+    else if (event_id == EVENT_SUNKEN_TREASURY) {
+        return run_sunken_treasury_event(state);
+    }
 
     return 1;
 }
 
+//특정 카드 몇장있는지 확인 함수
 static int count_cards_by_name_prefix(const Player *player, const char *prefix)
 {
     int i;
@@ -373,6 +380,7 @@ static int count_cards_by_name_prefix(const Player *player, const char *prefix)
     return count;
 }
 
+//융합자 이벤트 실행가능한지 체크하는 함수
 static int can_run_amalgamator_event(const Player *player)
 {
     if (player == NULL) {
@@ -394,6 +402,7 @@ static int can_run_amalgamator_event(const Player *player)
     return 1;
 }
 
+//특정이름의 카드 제거 함수
 static int remove_first_card_by_name_prefix(Player *player, const char *prefix)
 {
     int i;
@@ -414,22 +423,7 @@ static int remove_first_card_by_name_prefix(Player *player, const char *prefix)
     return 0;
 }
 
-static int add_card_to_owned_deck(Player *player, Card card)
-{
-    if (player == NULL) {
-        return 0;
-    }
-
-    if (player->owned_deck_count >= MAX_DECK_SIZE) {
-        return 0;
-    }
-
-    player->owned_deck[player->owned_deck_count] = card;
-    player->owned_deck_count++;
-
-    return 1;
-}
-
+//융합자 이벤트 실행 함수
 static int run_amalgamator_event(GameState *state)
 {
     int choice;
@@ -447,9 +441,9 @@ static int run_amalgamator_event(GameState *state)
         if (state->player.owned_deck_count >= MAX_DECK_SIZE) {
             remove_first_card_by_name_prefix(&state->player, "수비");
             remove_first_card_by_name_prefix(&state->player, "수비");
-            add_card_to_owned_deck(&state->player, new_card);
+            add_card_to_deck(&state->player, new_card);
         } else {
-            add_card_to_owned_deck(&state->player, new_card);
+            add_card_to_deck(&state->player, new_card);
             remove_first_card_by_name_prefix(&state->player, "수비");
             remove_first_card_by_name_prefix(&state->player, "수비");
         }
@@ -464,14 +458,50 @@ static int run_amalgamator_event(GameState *state)
         if (state->player.owned_deck_count >= MAX_DECK_SIZE) {
             remove_first_card_by_name_prefix(&state->player, "타격");
             remove_first_card_by_name_prefix(&state->player, "타격");
-            add_card_to_owned_deck(&state->player, new_card);
+            add_card_to_deck(&state->player, new_card);
         } else {
-            add_card_to_owned_deck(&state->player, new_card);
+            add_card_to_deck(&state->player, new_card);
             remove_first_card_by_name_prefix(&state->player, "타격");
             remove_first_card_by_name_prefix(&state->player, "타격");
         }
 
         show_amalgamator_result_screen(&new_card, "타격", 2);
+        return 1;
+    }
+
+    return 1;
+}
+
+//가라앉은 보물 이벤트 함수
+static int run_sunken_treasury_event(GameState *state)
+{
+    int choice;
+    int gold_gain;
+    Card greed;
+
+    if (state == NULL) {
+        return 0;
+    }
+
+    choice = show_sunken_treasury_event_screen();
+
+    if (choice == 1) {
+        gold_gain = 52 + rand() % 16;
+
+        state->player.gold += gold_gain;
+
+        show_sunken_treasury_result_screen(choice, gold_gain, NULL, &state->player);
+        return 1;
+    }
+
+    if (choice == 2) {
+        gold_gain = 303 + rand() % 61;
+        greed = create_greed_card();
+
+        state->player.gold += gold_gain;
+        add_card_to_deck(&state->player, greed);
+
+        show_sunken_treasury_result_screen(choice, gold_gain, &greed, &state->player);
         return 1;
     }
 

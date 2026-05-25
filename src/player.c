@@ -1,4 +1,5 @@
 #include "player.h"
+#include <string.h>
 #include <stdio.h>
 
 //플레이어 체력을 회복시켜주는 함수
@@ -47,6 +48,9 @@ int remove_card_from_deck(Player *player, int index) {
 
     if (index < 0 || index >= player->owned_deck_count) {
         return 0;
+    }
+    if (strcmp(player->owned_deck[index].name, "탐욕") == 0) {
+    return 0;
     }
 
     for (i = index; i < player->owned_deck_count - 1; i++) {
