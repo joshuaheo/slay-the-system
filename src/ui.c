@@ -1012,7 +1012,6 @@ mvprintw(card_y + 12, start_x,
     refresh();
 }
 
-
 //인벤토리 화면 출력 함수
 static void show_battle_inventory_menu(Player *player)
 {
@@ -1105,12 +1104,7 @@ static BattleResult handle_play_selected_card(GameState *state,Enemy enemies[],i
 }
 
 //턴종료 처리함수
-static BattleResult handle_end_turn(GameState *state,
-                                    Enemy enemies[],
-                                    int enemy_count,
-                                    int message_y,
-                                    int message_x,
-                                    int *turn_number)
+static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_count,int message_y,int message_x,int *turn_number)
 {
     Player *player;
     BattleResult battle_result;
@@ -1256,7 +1250,7 @@ static void print_wrapped_text(int y, int x, const char *text, int width, int ma
 }
 
 //전투 보상 화면 출력 함수
-void show_battle_reward_screen(GameState *state)
+void show_battle_reward_screen(GameState *state, StageType stage)
 {
     Card rewards[CARD_REWARD_COUNT];
     Player *player;
@@ -1267,6 +1261,8 @@ void show_battle_reward_screen(GameState *state)
     int start_x;
     int card_width;
     int gold_reward;
+    int has_relic_reward;
+    Relic relic_reward;
 
     if (state == NULL) {
         return;
@@ -1276,10 +1272,18 @@ void show_battle_reward_screen(GameState *state)
     selected = 0;
     card_width = 26;
 
-    gold_reward = generate_gold_reward(20, 30);
-    player->gold += gold_reward;
+has_relic_reward = 0;
 
-    generate_card_rewards(rewards, CARD_REWARD_COUNT);
+if (stage == STAGE_ELITE) {
+    gold_reward = generate_gold_reward(40, 60);
+    has_relic_reward = grant_random_standard_relic(player, &relic_reward);
+} else {
+    gold_reward = generate_gold_reward(20, 30);
+}
+
+player->gold += gold_reward;
+
+generate_card_rewards(rewards, CARD_REWARD_COUNT, stage);
 
     while (1) {
         clear();
@@ -1287,14 +1291,18 @@ void show_battle_reward_screen(GameState *state)
         start_y = 2;
         start_x = 4;
 
-        mvprintw(start_y, start_x, "전투 승리!");
         mvprintw(start_y + 2, start_x, "획득 골드: %d", gold_reward);
-        mvprintw(start_y + 3, start_x, "현재 골드: %d", player->gold);
+mvprintw(start_y + 3, start_x, "현재 골드: %d", player->gold);
 
-        mvprintw(start_y + 5, start_x, "카드 보상을 선택하세요.");
-        mvprintw(start_y + 6, start_x, "←/→ 또는 A/D: 선택 이동");
-        mvprintw(start_y + 7, start_x, "Enter 또는 1/2/3: 선택");
-        mvprintw(start_y + 8, start_x, "S 또는 0: 카드 보상 넘기기");
+if (has_relic_reward) {
+    mvprintw(start_y + 4, start_x, "획득 유물: %s", relic_reward.name);
+    mvprintw(start_y + 5, start_x, "%s", relic_reward.description);
+}
+
+mvprintw(start_y + 7, start_x, "카드 보상을 선택하세요.");
+mvprintw(start_y + 8, start_x, "←/→ 또는 A/D: 선택 이동");
+mvprintw(start_y + 9, start_x, "Enter 또는 1/2/3: 선택");
+mvprintw(start_y + 10, start_x, "S 또는 0: 카드 보상 넘기기");
 
         for (i = 0; i < CARD_REWARD_COUNT; i++) {
             int card_x;
@@ -1302,20 +1310,20 @@ void show_battle_reward_screen(GameState *state)
             card_x = start_x + i * 32;
 
             if (i == selected) {
-                mvprintw(start_y + 11, card_x, ">");
-            } else {
-                mvprintw(start_y + 11, card_x, " ");
-            }
+    mvprintw(start_y + 13, card_x, ">");
+} else {
+    mvprintw(start_y + 13, card_x, " ");
+}
 
-            mvprintw(start_y + 11, card_x + 2, "[%d]", i + 1);
-            mvprintw(start_y + 12, card_x + 2, "%s", rewards[i].name);
-            mvprintw(start_y + 13, card_x + 2, "비용: %d", rewards[i].cost);
+mvprintw(start_y + 13, card_x + 2, "[%d]", i + 1);
+mvprintw(start_y + 14, card_x + 2, "%s", rewards[i].name);
+mvprintw(start_y + 15, card_x + 2, "비용: %d", rewards[i].cost);
 
-            print_wrapped_text(start_y + 15,
-                               card_x + 2,
-                               rewards[i].description,
-                               card_width,
-                               4);
+print_wrapped_text(start_y + 17,
+                   card_x + 2,
+                   rewards[i].description,
+                   card_width,
+                   4);
         }
 
         refresh();

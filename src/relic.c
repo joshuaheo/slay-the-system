@@ -127,7 +127,13 @@ static const Relic relic_pool[] = {
     RELIC_UNCOMMON,
     "석재 달력",
     "5턴 종료 시, 모든 적에게 피해를 35 줍니다."
-    }   
+    },
+    {
+    RELIC_HAPPY_FLOWER,
+    RELIC_COMMON,
+    "행복한 꽃",
+    "3턴마다 에너지를 1 얻습니다."
+    }//index 20
 };
 
 //드랍율에 적용받는 희귀도인지 확인하는 함수
@@ -458,6 +464,9 @@ void apply_relics_on_turn_start(Player *player, Enemy enemies[], int enemy_count
     }
     if (turn_number == 3 && has_relic(player, RELIC_CAPTAINS_WHEEL)) {
     player->block += 18;
+    }
+    if (turn_number % 3 == 0 && has_relic(player, RELIC_HAPPY_FLOWER)) {
+    player->energy += 1;
     }
     if (has_relic(player, RELIC_MERCURY_HOURGLASS)) {
         if (enemies == NULL || enemy_count <= 0) {

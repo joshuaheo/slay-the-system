@@ -15,7 +15,7 @@ int show_login_screen(char *username, int size);
 void show_invalid_username_screen(void);
 
 BattleResult show_temp_battle_screen(GameState *state, StageType stage);
-void show_battle_reward_screen(GameState *state);
+void show_battle_reward_screen(GameState *state, StageType stage);
 void show_current_stage_screen(int floor, StageType stage);
 
 int show_rest_choice_screen(const Player *player);

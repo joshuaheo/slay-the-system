@@ -50,7 +50,7 @@ void init_new_game(GameState *state, const char *username) {
     player->gold = 999;
 
     player->relic_count = 0;
-    add_relic_to_player(player, get_relic_from_pool(19));
+    add_relic_to_player(player, get_relic_from_pool(0));
 
     player->max_energy = 3;
     player->energy = 3;
@@ -101,16 +101,18 @@ static int run_shop_stage(GameState *state)
 }
 
 //전투에서 이긴 후 흐름을 진행하는 함수
-int handle_battle_win(GameState *state) {
+int handle_battle_win(GameState *state, StageType stage)
+{
     if (state == NULL) {
         return 0;
     }
+
     apply_relics_on_battle_win(&state->player);
 
-    show_battle_reward_screen(state);
+    show_battle_reward_screen(state, stage);
 
     cleanup_after_battle(&state->player);
-    
+
     state->floor++;
 
     if (!save_game(state)) {
@@ -127,23 +129,6 @@ int handle_battle_lose(GameState *state) {
     }
 
     delete_save_file(state->username);
-
-    return 1;
-}
-
-//전투 결과 흐름을 판정하는 함수
-int handle_battle_result(GameState *state, BattleResult result) {
-    if (state == NULL) {
-        return 0;
-    }
-
-    if (result == BATTLE_WIN) {
-        return handle_battle_win(state);
-    }
-
-    if (result == BATTLE_LOSE) {
-        return handle_battle_lose(state);
-    }
 
     return 1;
 }
@@ -185,7 +170,7 @@ int run_current_stage(GameState *state) {
                 return 0;
             }
 
-            return handle_battle_win(state);
+            return handle_battle_win(state, stage);
         }
 
         if (battle_result == BATTLE_LOSE) {
