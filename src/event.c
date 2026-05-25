@@ -4,8 +4,14 @@
 #include "player.h"
 #include "save.h"
 #include "ui.h"
+#include "card.h"
 
-#define EVENT_COUNT 3
+#define EVENT_COUNT 4
+
+#define EVENT_SYMBIOTE 0
+#define EVENT_MUTATING_FOREST 1
+#define EVENT_JUNGLE_MAZE 2
+#define EVENT_AMALGAMATOR 3
 
 static int run_random_event(GameState *state);
 static int run_mutating_forest_event(GameState *state);
@@ -16,6 +22,15 @@ static void append_corrupted_tag(Card *card);
 static void corrupt_attack_card(Card *card);
 static int run_symbiote_event(GameState *state);
 static int run_jungle_maze_event(GameState *state);
+
+static int run_event_by_id(GameState *state, int event_id);
+static int is_event_available(const GameState *state, int event_id);
+
+static int run_amalgamator_event(GameState *state);
+static int can_run_amalgamator_event(const Player *player);
+static int count_cards_by_name_prefix(const Player *player, const char *prefix);
+static int remove_first_card_by_name_prefix(Player *player, const char *prefix);
+static int add_card_to_owned_deck(Player *player, Card card);
 
 //공격카드에 오염을 추가하는 함수
 static int has_attack_card_to_corrupt(const Player *player)
@@ -136,23 +151,31 @@ static int run_symbiote_event(GameState *state)
 //랜덤 이벤트 선택 함수
 static int run_random_event(GameState *state)
 {
-    int event_index;
+    int available_events[EVENT_COUNT];
+    int available_count;
+    int i;
+    int selected_event;
 
     if (state == NULL) {
         return 0;
     }
 
-    event_index = rand() % EVENT_COUNT;
+    available_count = 0;
 
-    if (event_index == 0) {
-        return run_symbiote_event(state);
+    for (i = 0; i < EVENT_COUNT; i++) {
+        if (is_event_available(state, i)) {
+            available_events[available_count] = i;
+            available_count++;
+        }
     }
-    else if (event_index == 1) {
-        return run_mutating_forest_event(state);
+
+    if (available_count <= 0) {
+        return 1;
     }
-    else {
-        return run_jungle_maze_event(state);
-    }
+
+    selected_event = available_events[rand() % available_count];
+
+    return run_event_by_id(state, selected_event);
 }
 
 //카드 1장 제거 보조함수(2장 제거일경우)
@@ -287,6 +310,168 @@ static int run_jungle_maze_event(GameState *state)
         state->player.gold += gold_gain;
 
         show_jungle_maze_result_screen(choice, gold_gain, hp_loss, &state->player);
+        return 1;
+    }
+
+    return 1;
+}
+
+static int is_event_available(const GameState *state, int event_id)
+{
+    if (state == NULL) {
+        return 0;
+    }
+
+    if (event_id == EVENT_AMALGAMATOR) {
+        return can_run_amalgamator_event(&state->player);
+    }
+
+    return 1;
+}
+
+static int run_event_by_id(GameState *state, int event_id)
+{
+    if (state == NULL) {
+        return 0;
+    }
+
+    if (event_id == EVENT_SYMBIOTE) {
+        return run_symbiote_event(state);
+    }
+    else if (event_id == EVENT_MUTATING_FOREST) {
+        return run_mutating_forest_event(state);
+    }
+    else if (event_id == EVENT_JUNGLE_MAZE) {
+        return run_jungle_maze_event(state);
+    }
+    else if (event_id == EVENT_AMALGAMATOR) {
+        return run_amalgamator_event(state);
+    }
+
+    return 1;
+}
+
+static int count_cards_by_name_prefix(const Player *player, const char *prefix)
+{
+    int i;
+    int count;
+    size_t prefix_len;
+
+    if (player == NULL || prefix == NULL) {
+        return 0;
+    }
+
+    count = 0;
+    prefix_len = strlen(prefix);
+
+    for (i = 0; i < player->owned_deck_count; i++) {
+        if (strncmp(player->owned_deck[i].name, prefix, prefix_len) == 0) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+static int can_run_amalgamator_event(const Player *player)
+{
+    if (player == NULL) {
+        return 0;
+    }
+
+    if (player->owned_deck_count < 11) {
+        return 0;
+    }
+
+    if (count_cards_by_name_prefix(player, "타격") < 2) {
+        return 0;
+    }
+
+    if (count_cards_by_name_prefix(player, "수비") < 2) {
+        return 0;
+    }
+
+    return 1;
+}
+
+static int remove_first_card_by_name_prefix(Player *player, const char *prefix)
+{
+    int i;
+    size_t prefix_len;
+
+    if (player == NULL || prefix == NULL) {
+        return 0;
+    }
+
+    prefix_len = strlen(prefix);
+
+    for (i = 0; i < player->owned_deck_count; i++) {
+        if (strncmp(player->owned_deck[i].name, prefix, prefix_len) == 0) {
+            return remove_card_from_deck(player, i);
+        }
+    }
+
+    return 0;
+}
+
+static int add_card_to_owned_deck(Player *player, Card card)
+{
+    if (player == NULL) {
+        return 0;
+    }
+
+    if (player->owned_deck_count >= MAX_DECK_SIZE) {
+        return 0;
+    }
+
+    player->owned_deck[player->owned_deck_count] = card;
+    player->owned_deck_count++;
+
+    return 1;
+}
+
+static int run_amalgamator_event(GameState *state)
+{
+    int choice;
+    Card new_card;
+
+    if (state == NULL) {
+        return 0;
+    }
+
+    choice = show_amalgamator_event_screen();
+
+    if (choice == 1) {
+        new_card = get_card_from_pool(CARD_INDEX_ULTIMATE_DEFEND);
+
+        if (state->player.owned_deck_count >= MAX_DECK_SIZE) {
+            remove_first_card_by_name_prefix(&state->player, "수비");
+            remove_first_card_by_name_prefix(&state->player, "수비");
+            add_card_to_owned_deck(&state->player, new_card);
+        } else {
+            add_card_to_owned_deck(&state->player, new_card);
+            remove_first_card_by_name_prefix(&state->player, "수비");
+            remove_first_card_by_name_prefix(&state->player, "수비");
+        }
+
+        show_amalgamator_result_screen(&new_card, "수비", 2);
+        return 1;
+    }
+
+    if (choice == 2) {
+        new_card = get_card_from_pool(CARD_INDEX_ULTIMATE_STRIKE);
+
+        if (state->player.owned_deck_count >= MAX_DECK_SIZE) {
+            remove_first_card_by_name_prefix(&state->player, "타격");
+            remove_first_card_by_name_prefix(&state->player, "타격");
+            add_card_to_owned_deck(&state->player, new_card);
+        } else {
+            add_card_to_owned_deck(&state->player, new_card);
+            remove_first_card_by_name_prefix(&state->player, "타격");
+            remove_first_card_by_name_prefix(&state->player, "타격");
+        }
+
+        show_amalgamator_result_screen(&new_card, "타격", 2);
         return 1;
     }
 

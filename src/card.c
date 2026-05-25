@@ -4,30 +4,6 @@
 #include <string.h>
 #include <time.h>
 
-//카드 인덱스
-enum {
-    CARD_INDEX_STRIKE = 0,
-    CARD_INDEX_BASH,
-    CARD_INDEX_DEFEND,
-    CARD_INDEX_SWORD_BOOMERANG,
-    CARD_INDEX_TWIN_STRIKE,
-    CARD_INDEX_BREAKTHROUGH,
-    CARD_INDEX_THUNDERCLAP,
-    CARD_INDEX_IRON_WAVE,
-    CARD_INDEX_POMMEL_STRIKE,
-    CARD_INDEX_BLOODLETTING,
-    CARD_INDEX_TREMBLE, //index 10
-    CARD_INDEX_SHRUG_IT_OFF,
-    CARD_INDEX_BLOOD_WALL,
-    CARD_INDEX_HEMOKINESIS,
-    CARD_INDEX_UPPERCUT,
-    CARD_INDEX_BLUDGEON,
-    CARD_INDEX_TAUNT,
-    CARD_INDEX_INFLAME,
-    CARD_INDEX_OFFERING,
-    CARD_INDEX_IMPERVIOUS, //index 19
-};
-
 //카드 전체 배열
 static const Card card_pool[] = {
     {
@@ -529,7 +505,57 @@ static const Card card_pool[] = {
         .hit_count = 0,
 
         .special = SPECIAL_NONE
-    }
+    },
+    {
+    .name = "궁극의 타격",
+    .description = "피해를 14 줍니다.",
+    .type = CARD_ATTACK,
+    .rarity = CARD_RARE,
+    .target = TARGET_ENEMY,
+    .cost = 1,
+
+    .damage = 14,
+    .block = 0,
+
+    .strength = 0,
+    .weak = 0,
+    .vulnerable = 0,
+
+    .draw = 0,
+    .energy = 0,
+
+    .hp_loss = 0,
+
+    .exhaust = 0,
+    .hit_count = 1,
+
+    .special = SPECIAL_NONE
+},
+{
+    .name = "궁극의 수비",
+    .description = "방어도를 11 얻습니다.",
+    .type = CARD_SKILL,
+    .rarity = CARD_RARE,
+    .target = TARGET_SELF,
+    .cost = 1,
+
+    .damage = 0,
+    .block = 11,
+
+    .strength = 0,
+    .weak = 0,
+    .vulnerable = 0,
+
+    .draw = 0,
+    .energy = 0,
+
+    .hp_loss = 0,
+
+    .exhaust = 0,
+    .hit_count = 1,
+
+    .special = SPECIAL_NONE
+},
 };
 
 //카드 덱에 카드가 몇개 있는지 반환하는 함수

@@ -2515,3 +2515,77 @@ void show_jungle_maze_result_screen(int choice, int gold_gain, int hp_loss, cons
     clear();
     refresh();
 }
+
+//융합자 이벤트
+int show_amalgamator_event_screen(void)
+{
+    int ch;
+
+    while (1) {
+        clear();
+
+        mvprintw(2, 5, "==================== 이벤트: 융합자 ====================");
+        mvprintw(5, 5, "깡! 깡!!");
+        mvprintw(6, 5, "벽 건너편에서 금속과 금속이 부딪히는 소리가 울려 퍼집니다.");
+        mvprintw(8, 5, "당신이 벽에 귀를 기울이자, 칼 같은 틈이 열립니다.");
+        mvprintw(9, 5, "여섯 개의 팔을 지닌 기묘한 인물이 작업에 몰두하고 있습니다.");
+        mvprintw(11, 5, "그는 당신의 카드를 보며 외칩니다.");
+        mvprintw(12, 5, "\"결합이다! 더 나은 형태로 만들어주마!\"");
+
+        mvprintw(15, 5, "[1] 수비를 합친다");
+        mvprintw(16, 9, "수비 2장을 제거합니다. 궁극의 수비를 덱에 추가합니다.");
+
+        mvprintw(19, 5, "[2] 타격을 합친다");
+        mvprintw(20, 9, "타격 2장을 제거합니다. 궁극의 타격을 덱에 추가합니다.");
+
+        mvprintw(23, 5, "1 또는 2를 눌러 선택하세요.");
+
+        refresh();
+
+        ch = getch();
+
+        if (ch == '1') {
+            return 1;
+        }
+
+        if (ch == '2') {
+            return 2;
+        }
+    }
+}
+
+//융합자 이벤트 결과화면
+void show_amalgamator_result_screen(const Card *new_card, const char *removed_name, int removed_count)
+{
+    clear();
+
+    mvprintw(5, 5, "융합자가 망치를 내려칩니다.");
+    mvprintw(6, 5, "불꽃이 튀고, 낡은 카드들이 하나의 새로운 형태로 합쳐집니다.");
+
+    if (removed_name != NULL) {
+        mvprintw(9, 5, "제거한 카드: %s %d장", removed_name, removed_count);
+    }
+
+    if (new_card != NULL) {
+        mvprintw(11, 5, "획득한 카드: %s", new_card->name);
+        mvprintw(12, 5, "비용: %d", new_card->cost);
+
+        if (new_card->damage > 0) {
+            mvprintw(13, 5, "피해량: %d", new_card->damage);
+        }
+
+        if (new_card->block > 0) {
+            mvprintw(13, 5, "방어도: %d", new_card->block);
+        }
+
+        mvprintw(15, 5, "%s", new_card->description);
+    }
+
+    mvprintw(18, 5, "아무 키나 누르면 다음 층으로 이동합니다.");
+
+    refresh();
+    getch();
+
+    clear();
+    refresh();
+}

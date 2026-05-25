@@ -51,4 +51,7 @@ void show_max_hp_increased_screen(const Player *player, int amount);
 
 int show_jungle_maze_event_screen(void);
 void show_jungle_maze_result_screen(int choice, int gold_gain, int hp_loss, const Player *player);
+
+int show_amalgamator_event_screen(void);
+void show_amalgamator_result_screen(const Card *new_card, const char *removed_name, int removed_count);
 #endif
