@@ -1105,7 +1105,12 @@ static BattleResult handle_play_selected_card(GameState *state,Enemy enemies[],i
 }
 
 //턴종료 처리함수
-static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_count,int message_y,int message_x,int* turn_number)
+static BattleResult handle_end_turn(GameState *state,
+                                    Enemy enemies[],
+                                    int enemy_count,
+                                    int message_y,
+                                    int message_x,
+                                    int *turn_number)
 {
     Player *player;
     BattleResult battle_result;
@@ -1123,6 +1128,16 @@ static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_c
         return BATTLE_CONTINUE;
     }
 
+    if (turn_number != NULL) {
+        apply_relics_on_turn_end(player, enemies, enemy_count, *turn_number);
+
+        battle_result = check_battle_result(player, enemies, enemy_count);
+
+        if (battle_result != BATTLE_CONTINUE) {
+            return battle_result;
+        }
+    }
+
     decrease_player_turn_statuses(player);
 
     discard_hand(player);
@@ -1138,20 +1153,25 @@ static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_c
     }
 
     player->block = 0;
-player->energy = player->max_energy;
 
-if (turn_number != NULL) {
-    (*turn_number)++;
-    apply_relics_on_turn_start(player, enemies, enemy_count, *turn_number);
-}
+    if (has_relic(player, RELIC_ICE_CREAM)) {
+        player->energy += player->max_energy;
+    } else {
+        player->energy = player->max_energy;
+    }
 
-battle_result = check_battle_result(player, enemies, enemy_count);
+    if (turn_number != NULL) {
+        (*turn_number)++;
+        apply_relics_on_turn_start(player, enemies, enemy_count, *turn_number);
+    }
 
-if (battle_result != BATTLE_CONTINUE) {
-    return battle_result;
-}
+    battle_result = check_battle_result(player, enemies, enemy_count);
 
-draw_cards(player, 5);
+    if (battle_result != BATTLE_CONTINUE) {
+        return battle_result;
+    }
+
+    draw_cards(player, 5);
 
     return BATTLE_CONTINUE;
 }

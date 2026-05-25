@@ -25,5 +25,6 @@ void apply_relics_on_battle_start(Player *player, Enemy enemies[], int enemy_cou
 void apply_relics_on_battle_win(Player *player);
 void apply_relics_on_stage_enter(Player *player, StageType stage);
 void apply_relics_on_turn_start(Player *player, Enemy enemies[], int enemy_count, int turn_number);
+void apply_relics_on_turn_end(Player *player, Enemy enemies[], int enemy_count, int turn_number);
 
 #endif
