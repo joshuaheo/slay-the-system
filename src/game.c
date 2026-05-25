@@ -50,7 +50,7 @@ void init_new_game(GameState *state, const char *username) {
     player->gold = 999;
 
     player->relic_count = 0;
-    add_relic_to_player(player, get_relic_from_pool(0));
+    add_relic_to_player(player, get_relic_from_pool(6));
 
     player->max_energy = 3;
     player->energy = 3;
@@ -170,6 +170,7 @@ int run_current_stage(GameState *state) {
 
     stage = show_stage_choice_screen(state->floor, map_floor);
 
+    apply_relics_on_stage_enter(&state->player, stage);
     switch (stage) {
     case STAGE_ENEMY:
     case STAGE_ELITE:

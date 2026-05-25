@@ -40,7 +40,13 @@ static const Relic relic_pool[] = {
         RELIC_SHOP,
         "리의 와플",
         "획득 시, 최대 체력이 7 상승하고 모든 체력을 회복합니다."
-    }
+    }, //index 5
+    {
+    RELIC_PLANISPHERE,
+    RELIC_UNCOMMON,
+    "별자리판",
+    "이벤트 방에 진입할 때마다 체력을 5 회복합니다."
+    },
 };
 
 //드랍율에 적용받는 희귀도인지 확인하는 함수
@@ -274,5 +280,17 @@ void apply_relics_on_battle_win(Player *player)
 
     if (has_relic(player, RELIC_BURNING_BLOOD)) {
         heal_player(player, 6);
+    }
+}
+
+//이벤트 스테이지 들어갔을떄 적용되는 유물
+void apply_relics_on_stage_enter(Player *player, StageType stage)
+{
+    if (player == NULL) {
+        return;
+    }
+
+    if (stage == STAGE_EVENT && has_relic(player, RELIC_PLANISPHERE)) {
+        heal_player(player, 5);
     }
 }

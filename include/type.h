@@ -95,7 +95,8 @@ typedef enum {
     RELIC_PEAR,
     RELIC_OLD_COIN,
     RELIC_LEES_WAFFLE,
-
+    RELIC_PLANISPHERE,
+    
     RELIC_COUNT
  } RelicId;
 
