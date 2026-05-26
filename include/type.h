@@ -8,6 +8,7 @@
 #define MAX_ENEMIES 3
 #define MAX_FLOOR 15
 #define MAX_STAGE_CHOICES 2
+#define MAX_ACTIVE_POWERS 20
 
 //카드 타입
 typedef enum {
@@ -19,8 +20,33 @@ typedef enum {
 
 //공용구조체로만 해결되지 않는 카드들
 typedef enum {
-    SPECIAL_NONE
+    SPECIAL_NONE,
+    SPECIAL_FIEND_FIRE,
+    SPECIAL_CRIMSON_MANTLE,
+    SPECIAL_PYRE,
+    SPECIAL_DEMON_FORM
 } SpecialEffect;
+
+//파워카드 발동 시점
+typedef enum {
+    POWER_TRIGGER_NONE,
+    POWER_TRIGGER_TURN_START
+} PowerTrigger;
+
+//파워카드 턴별 발동
+typedef struct {
+    SpecialEffect special;
+    PowerTrigger trigger;
+
+    int hp_loss;
+    int block;
+    int strength;
+    int weak;
+    int vulnerable;
+    int damage;
+    int energy;
+    int draw;
+} ActivePower;
 
 //카드 대상범위(개인,전체,무작위,스스로(ex-방어))
 typedef enum {
@@ -163,6 +189,9 @@ typedef struct {
 
     Relic relics[MAX_RELICS];
     int relic_count;
+
+    ActivePower active_powers[MAX_ACTIVE_POWERS];
+    int active_power_count;
 
     int energy;
     int max_energy;

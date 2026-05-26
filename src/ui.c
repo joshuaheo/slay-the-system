@@ -1116,8 +1116,7 @@ static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_c
     player = &state->player;
 
     if (player->hp <= 0) {
-        show_battle_message(message_y,
-                            message_x,
+        show_battle_message(message_y,message_x,
                             "플레이어가 쓰러져 턴을 종료할 수 없습니다.");
         return BATTLE_CONTINUE;
     }
@@ -1157,6 +1156,7 @@ static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_c
     if (turn_number != NULL) {
         (*turn_number)++;
         apply_relics_on_turn_start(player, enemies, enemy_count, *turn_number);
+        apply_player_turn_start_powers(player, enemies, enemy_count);
     }
 
     battle_result = check_battle_result(player, enemies, enemy_count);

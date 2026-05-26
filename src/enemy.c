@@ -868,21 +868,27 @@ static void leaf_slime_take_turn(Enemy *enemy, Player *player)
     EnemyMove move;
     Card goop;
 
+    if (enemy == NULL || player == NULL) {
+        return;
+    }
+
+    clear_enemy_move(&move);
+
     if (enemy->pattern_index == 0) {
-    goop = create_goop_card();
-    add_card_to_discard(player, goop);
+        goop = create_goop_card();
+        add_card_to_discard(player, goop);
 
-    goop = create_goop_card();
-    add_card_to_discard(player, goop);
-} else {
-    move.has_attack = 1;
-    move.damage = 8;
-    move.hit_count = 1;
+        goop = create_goop_card();
+        add_card_to_discard(player, goop);
+    } else {
+        move.has_attack = 1;
+        move.damage = 8;
+        move.hit_count = 1;
 
-    apply_enemy_move(enemy, player, &move);
-}
+        apply_enemy_move(enemy, player, &move);
+    }
 
-enemy->pattern_index = 1 - enemy->pattern_index;
+    enemy->pattern_index = 1 - enemy->pattern_index;
 }
 
 //가지 슬라임 다음 패턴 판정 함수

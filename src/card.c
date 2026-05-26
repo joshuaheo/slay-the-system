@@ -556,6 +556,82 @@ static const Card card_pool[] = {
 
     .special = SPECIAL_NONE
 },
+{
+    "지옥불",
+    "손에 있는 모든 카드를 소멸시키고 소멸시킨 카드 1장당 피해를 7 줍니다.",
+    CARD_ATTACK,
+    CARD_RARE,
+    TARGET_ENEMY,
+    2,
+    7,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    SPECIAL_FIEND_FIRE
+},
+{
+    "핏빛 망토",
+    "내 턴 시작 시 체력을 1 잃고 방어도를 8 얻습니다.",
+    CARD_POWER,
+    CARD_RARE,
+    TARGET_SELF,
+    1,
+    0,
+    8,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    SPECIAL_CRIMSON_MANTLE
+},
+{
+    "불의 심장",
+    "매 턴 시작 시 에너지를 2 얻습니다.",
+    CARD_POWER,
+    CARD_RARE,
+    TARGET_SELF,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    SPECIAL_PYRE
+},
+{
+    "악마의 형상",
+    "내 턴 시작 시 힘을 2 얻습니다.",
+    CARD_POWER,
+    CARD_RARE,
+    TARGET_SELF,
+    2,
+    0,
+    0,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    SPECIAL_DEMON_FORM
+},
 };
 
 //카드 덱에 카드가 몇개 있는지 반환하는 함수
@@ -614,7 +690,7 @@ void init_starting_deck(Player *player)
         add_card_to_deck(player, get_card_from_pool(CARD_INDEX_DEFEND));
     }
 
-    add_card_to_deck(player, get_card_from_pool(CARD_INDEX_BASH));
+    add_card_to_deck(player, get_card_from_pool(CARD_INDEX_DEMON_FORM));
 }
 
 //draw_pile 카드 순서를 랜덤하게 섞는 함수

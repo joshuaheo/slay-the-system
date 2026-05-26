@@ -67,7 +67,8 @@ void cleanup_after_battle(Player *player) {
     player->strength = 0;
     player->weak = 0;
     player->vulnerable = 0;
-
+    player->active_power_count = 0;
+    memset(player->active_powers, 0, sizeof(player->active_powers));
     player->draw_count = 0;
     player->hand_count = 0;
     player->discard_count = 0;

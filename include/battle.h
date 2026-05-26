@@ -18,4 +18,6 @@ BattleResult check_battle_result(Player *player, Enemy enemies[], int enemy_coun
 void decrease_positive_value(int *value);
 void decrease_player_turn_statuses(Player *player);
 
+void apply_player_turn_start_powers(Player *player, Enemy enemies[], int enemy_count);
+
 #endif

@@ -18,7 +18,7 @@
 #define TERROR_EEL_TERROR_PENDING 8
 #endif
 static int g_shrink_effect_active = 0;
-
+static void remove_card_from_hand(Player *player, int hand_index);
 static int has_active_shrink_effect(Enemy enemies[], int enemy_count);
 static void increase_bygone_effigy_slow(Enemy enemies[], int enemy_count);
 
@@ -323,12 +323,227 @@ static void apply_random_enemy_effect(Player *player, Enemy enemies[], int enemy
     }
 }
 
+//손패 전체 소멸 함수
+static int exhaust_all_cards_in_hand(Player *player)
+{
+    int exhausted_count;
+
+    if (player == NULL) {
+        return 0;
+    }
+
+    exhausted_count = 0;
+
+    while (player->hand_count > 0) {
+        if (player->exhaust_count >= MAX_DECK_SIZE) {
+            break;
+        }
+
+        player->exhaust_pile[player->exhaust_count] = player->hand[0];
+        player->exhaust_count++;
+
+        remove_card_from_hand(player, 0);
+        exhausted_count++;
+    }
+
+    return exhausted_count;
+}
+
+//지옥불 특수 효과 함수
+static void apply_fiend_fire_effect(Player *player, Enemy enemies[], int enemy_count, Card card, int target_index)
+{
+    int i;
+    int exhausted_count;
+
+    if (player == NULL || enemies == NULL) {
+        return;
+    }
+
+    if (enemy_count <= 0) {
+        return;
+    }
+
+    if (!is_valid_enemy_target(enemies, enemy_count, target_index)) {
+        return;
+    }
+
+    exhausted_count = exhaust_all_cards_in_hand(player);
+
+if (card.exhaust) {
+    exhausted_count++;
+}
+
+for (i = 0; i < exhausted_count; i++) {
+    if (enemies[target_index].hp <= 0) {
+        break;
+    }
+
+    deal_damage_to_enemy(player, &enemies[target_index], card.damage);
+}
+}
+
+//파워카드 보조 함수
+static int add_active_power(Player *player, ActivePower power)
+{
+    if (player == NULL) {
+        return 0;
+    }
+
+    if (player->active_power_count >= MAX_ACTIVE_POWERS) {
+        return 0;
+    }
+
+    player->active_powers[player->active_power_count] = power;
+    player->active_power_count++;
+
+    return 1;
+}
+
+//턴 시작할 때 효과 나오는 파워카드 함수
+void apply_player_turn_start_powers(Player *player, Enemy enemies[], int enemy_count)
+{
+    int i;
+    int j;
+
+    if (player == NULL) {
+        return;
+    }
+
+    for (i = 0; i < player->active_power_count; i++) {
+        if (player->active_powers[i].trigger != POWER_TRIGGER_TURN_START) {
+            continue;
+        }
+
+        if (player->active_powers[i].hp_loss > 0) {
+            player->hp -= player->active_powers[i].hp_loss;
+
+            if (player->hp < 0) {
+                player->hp = 0;
+            }
+        }
+
+        if (player->active_powers[i].block > 0) {
+            player->block += player->active_powers[i].block;
+        }
+
+        if (player->active_powers[i].strength > 0) {
+            player->strength += player->active_powers[i].strength;
+        }
+
+        if (player->active_powers[i].energy > 0) {
+            player->energy += player->active_powers[i].energy;
+        }
+
+        if (player->active_powers[i].draw > 0) {
+            draw_cards(player, player->active_powers[i].draw);
+        }
+
+        if (player->active_powers[i].damage > 0 && enemies != NULL && enemy_count > 0) {
+            for (j = 0; j < enemy_count; j++) {
+                if (enemies[j].hp > 0) {
+                    deal_damage_to_enemy(player, &enemies[j], player->active_powers[i].damage);
+                }
+            }
+        }
+    }
+}
+
+//핏빛 망토 등록 함수
+static void apply_crimson_mantle_effect(Player *player, Card card)
+{
+    ActivePower power;
+
+    if (player == NULL) {
+        return;
+    }
+
+    power.special = SPECIAL_CRIMSON_MANTLE;
+    power.trigger = POWER_TRIGGER_TURN_START;
+
+    power.hp_loss = 1;
+    power.block = card.block;
+    power.strength = 0;
+    power.weak = 0;
+    power.vulnerable = 0;
+    power.damage = 0;
+    power.energy = 0;
+    power.draw = 0;
+
+    add_active_power(player, power);
+}
+
+//불의 심장 등록 함수
+static void apply_pyre_effect(Player *player)
+{
+    ActivePower power;
+
+    if (player == NULL) {
+        return;
+    }
+
+    power.special = SPECIAL_PYRE;
+    power.trigger = POWER_TRIGGER_TURN_START;
+
+    power.hp_loss = 0;
+    power.block = 0;
+    power.strength = 0;
+    power.weak = 0;
+    power.vulnerable = 0;
+    power.damage = 0;
+    power.energy = 2;
+    power.draw = 0;
+
+    add_active_power(player, power);
+}
+
+//악마의 형상 등록 함수
+static void apply_demon_form_effect(Player *player, Card card)
+{
+    ActivePower power;
+
+    if (player == NULL) {
+        return;
+    }
+
+    power.special = SPECIAL_DEMON_FORM;
+    power.trigger = POWER_TRIGGER_TURN_START;
+
+    power.hp_loss = 0;
+    power.block = 0;
+    power.strength = card.strength;
+    power.weak = 0;
+    power.vulnerable = 0;
+    power.damage = 0;
+    power.energy = 0;
+    power.draw = 0;
+
+    add_active_power(player, power);
+}
+
 //카드 효과 전체를 실제로 적용하는 중심 함수
 static void apply_card_effect(Player *player, Enemy enemies[], int enemy_count, Card card, int target_index)
 {
     int i;
 
     if (player == NULL) {
+        return;
+    }
+    if (card.special == SPECIAL_FIEND_FIRE) {
+        apply_fiend_fire_effect(player, enemies, enemy_count, card, target_index);
+        return;
+    }
+
+    if (card.special == SPECIAL_CRIMSON_MANTLE) {
+        apply_crimson_mantle_effect(player, card);
+        return;
+    }
+
+    if (card.special == SPECIAL_PYRE) {
+        apply_pyre_effect(player);
+        return;
+    }
+    if (card.special == SPECIAL_DEMON_FORM) {
+        apply_demon_form_effect(player, card);
         return;
     }
 
