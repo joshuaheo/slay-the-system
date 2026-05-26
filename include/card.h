@@ -44,7 +44,13 @@ enum {
     CARD_INDEX_FIEND_FIRE, //index 22
     CARD_INDEX_CRIMSON_MANTLE, //index 23
     CARD_INDEX_PYRE, //index 24
-    CARD_INDEX_DEMON_FORM //index 25
+    CARD_INDEX_DEMON_FORM, //index 25
+    CARD_INDEX_PACT_END, //index 26
+    CARD_INDEX_DOMINATE, //index 27
+    CARD_INDEX_FORGOTTEN_RITUAL, //index 28
+    CARD_INDEX_ASHEN_STRIKE, //index 29
+    CARD_INDEX_SPITE, //index 30
+    CARD_INDEX_MOLTEN_FIST //index 31
 };
 
 #endif

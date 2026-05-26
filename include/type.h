@@ -24,7 +24,13 @@ typedef enum {
     SPECIAL_FIEND_FIRE,
     SPECIAL_CRIMSON_MANTLE,
     SPECIAL_PYRE,
-    SPECIAL_DEMON_FORM
+    SPECIAL_DEMON_FORM,
+    SPECIAL_PACT_END,
+    SPECIAL_DOMINATE,
+    SPECIAL_FORGOTTEN_RITUAL,
+    SPECIAL_ASHEN_STRIKE,
+    SPECIAL_SPITE,
+    SPECIAL_MOLTEN_FIST
 } SpecialEffect;
 
 //파워카드 발동 시점
@@ -184,6 +190,9 @@ typedef struct {
 
     Card exhaust_pile[MAX_DECK_SIZE];
     int exhaust_count;
+
+    int exhausted_this_turn;
+    int hp_lost_this_turn;
 
     int gold;
 

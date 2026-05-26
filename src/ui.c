@@ -336,7 +336,8 @@ BattleResult show_temp_battle_screen(GameState *state, StageType stage)
     }
 
     player = &state->player;
-
+    player->exhausted_this_turn = 0;
+    player->hp_lost_this_turn = 0;
     init_battle_enemies(stage, state->floor, enemies, &enemy_count);
     apply_relics_on_battle_start(player, enemies, enemy_count);
     apply_relics_on_turn_start(player, enemies, enemy_count, turn_number);
@@ -1155,6 +1156,8 @@ static BattleResult handle_end_turn(GameState *state,Enemy enemies[],int enemy_c
 
     if (turn_number != NULL) {
         (*turn_number)++;
+        player->exhausted_this_turn = 0;
+        player->hp_lost_this_turn = 0;
         apply_relics_on_turn_start(player, enemies, enemy_count, *turn_number);
         apply_player_turn_start_powers(player, enemies, enemy_count);
     }

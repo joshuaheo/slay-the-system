@@ -21,6 +21,7 @@ static int g_shrink_effect_active = 0;
 static void remove_card_from_hand(Player *player, int hand_index);
 static int has_active_shrink_effect(Enemy enemies[], int enemy_count);
 static void increase_bygone_effigy_slow(Enemy enemies[], int enemy_count);
+static void lose_player_hp_by_card_or_power(Player *player, int amount);
 
 //카드가 몇 번 공격하는지 계산하는 함수.
 static int get_card_hit_count(const Card *card)
@@ -118,6 +119,20 @@ static int get_random_alive_enemy_index(Enemy enemies[], int enemy_count)
     random_index = rand() % alive_count;
 
     return alive_indices[random_index];
+}
+
+//카드 특수 조건 검사
+static int can_use_special_card(Player *player, Card card)
+{
+    if (player == NULL) {
+        return 0;
+    }
+
+    if (card.special == SPECIAL_PACT_END) {
+        return player->exhaust_count >= 3;
+    }
+
+    return 1;
 }
 
 //카드의 target 타입에 따라 이 카드를 사용할 수 있는지 판단하는 함수.
@@ -341,6 +356,7 @@ static int exhaust_all_cards_in_hand(Player *player)
 
         player->exhaust_pile[player->exhaust_count] = player->hand[0];
         player->exhaust_count++;
+        player->exhausted_this_turn++;
 
         remove_card_from_hand(player, 0);
         exhausted_count++;
@@ -415,12 +431,9 @@ void apply_player_turn_start_powers(Player *player, Enemy enemies[], int enemy_c
         }
 
         if (player->active_powers[i].hp_loss > 0) {
-            player->hp -= player->active_powers[i].hp_loss;
-
-            if (player->hp < 0) {
-                player->hp = 0;
-            }
+            lose_player_hp_by_card_or_power(player, player->active_powers[i].hp_loss);
         }
+    
 
         if (player->active_powers[i].block > 0) {
             player->block += player->active_powers[i].block;
@@ -520,6 +533,135 @@ static void apply_demon_form_effect(Player *player, Card card)
     add_active_power(player, power);
 }
 
+//조약의 끝 등록 함수
+static void apply_pact_end_effect(Player *player, Enemy enemies[], int enemy_count, Card card)
+{
+    int i;
+
+    if (player == NULL || enemies == NULL) {
+        return;
+    }
+
+    if (enemy_count <= 0) {
+        return;
+    }
+
+    for (i = 0; i < enemy_count; i++) {
+        if (enemies[i].hp > 0) {
+            deal_damage_to_enemy(player, &enemies[i], card.damage);
+        }
+    }
+}
+
+//제압 카드 함수
+static void apply_dominate_effect(Player *player, Enemy enemies[], int enemy_count, Card card, int target_index)
+{
+    if (player == NULL || enemies == NULL) {
+        return;
+    }
+
+    if (enemy_count <= 0) {
+        return;
+    }
+
+    if (!is_valid_enemy_target(enemies, enemy_count, target_index)) {
+        return;
+    }
+
+    apply_enemy_status_effect(&enemies[target_index], card);
+
+    player->strength += enemies[target_index].vulnerable;
+}
+
+//잊힌 의식 카드 함수
+static void apply_forgotten_ritual_effect(Player *player, Card card)
+{
+    if (player == NULL) {
+        return;
+    }
+
+    if (player->exhausted_this_turn > 0) {
+        player->energy += card.energy;
+    }
+}
+
+//잿빛 타격 카드 함수
+static void apply_ashen_strike_effect(Player *player, Enemy enemies[], int enemy_count, Card card, int target_index)
+{
+    int damage;
+
+    if (player == NULL || enemies == NULL) {
+        return;
+    }
+
+    if (enemy_count <= 0) {
+        return;
+    }
+
+    if (!is_valid_enemy_target(enemies, enemy_count, target_index)) {
+        return;
+    }
+
+    damage = card.damage + player->exhaust_count * 3;
+
+    deal_damage_to_enemy(player, &enemies[target_index], damage);
+}
+
+//악의 카드 함수
+static void apply_spite_effect(Player *player, Enemy enemies[], int enemy_count, Card card, int target_index)
+{
+    int i;
+    int hit_count;
+
+    if (player == NULL || enemies == NULL) {
+        return;
+    }
+
+    if (enemy_count <= 0) {
+        return;
+    }
+
+    if (!is_valid_enemy_target(enemies, enemy_count, target_index)) {
+        return;
+    }
+
+    hit_count = 1;
+
+    if (player->hp_lost_this_turn > 0) {
+        hit_count = 2;
+    }
+
+    for (i = 0; i < hit_count; i++) {
+        if (enemies[target_index].hp <= 0) {
+            break;
+        }
+
+        deal_damage_to_enemy(player, &enemies[target_index], card.damage);
+    }
+}
+
+//녹아내리는 주먹 카드 함수
+static void apply_molten_fist_effect(Player *player, Enemy enemies[], int enemy_count, Card card, int target_index)
+{
+    if (player == NULL || enemies == NULL) {
+        return;
+    }
+
+    if (enemy_count <= 0) {
+        return;
+    }
+
+    if (!is_valid_enemy_target(enemies, enemy_count, target_index)) {
+        return;
+    }
+
+    deal_damage_to_enemy(player, &enemies[target_index], card.damage);
+
+    if (enemies[target_index].hp > 0 && enemies[target_index].vulnerable > 0) {
+        enemies[target_index].vulnerable *= 2;
+    }
+}
+
 //카드 효과 전체를 실제로 적용하는 중심 함수
 static void apply_card_effect(Player *player, Enemy enemies[], int enemy_count, Card card, int target_index)
 {
@@ -528,8 +670,24 @@ static void apply_card_effect(Player *player, Enemy enemies[], int enemy_count, 
     if (player == NULL) {
         return;
     }
+    if (card.special == SPECIAL_MOLTEN_FIST) {
+        apply_molten_fist_effect(player, enemies, enemy_count, card, target_index);
+        return;
+    }
     if (card.special == SPECIAL_FIEND_FIRE) {
         apply_fiend_fire_effect(player, enemies, enemy_count, card, target_index);
+        return;
+    }
+    if (card.special == SPECIAL_SPITE) {
+        apply_spite_effect(player, enemies, enemy_count, card, target_index);
+        return;
+    }
+    if (card.special == SPECIAL_FORGOTTEN_RITUAL) {
+        apply_forgotten_ritual_effect(player, card);
+        return;
+    }
+    if (card.special == SPECIAL_ASHEN_STRIKE) {
+        apply_ashen_strike_effect(player, enemies, enemy_count, card, target_index);
         return;
     }
 
@@ -544,6 +702,14 @@ static void apply_card_effect(Player *player, Enemy enemies[], int enemy_count, 
     }
     if (card.special == SPECIAL_DEMON_FORM) {
         apply_demon_form_effect(player, card);
+        return;
+    }
+    if (card.special == SPECIAL_PACT_END) {
+        apply_pact_end_effect(player, enemies, enemy_count, card);
+        return;
+    }
+    if (card.special == SPECIAL_DOMINATE) {
+        apply_dominate_effect(player, enemies, enemy_count, card, target_index);
         return;
     }
 
@@ -622,6 +788,7 @@ static void move_used_card(Player *player, Card card)
         if (player->exhaust_count < MAX_DECK_SIZE) {
             player->exhaust_pile[player->exhaust_count] = card;
             player->exhaust_count++;
+            player->exhausted_this_turn++;
         }
 
         return;
@@ -656,6 +823,29 @@ void decrease_player_turn_statuses(Player *player)
     decrease_positive_value(&player->vulnerable);
 }
 
+//이번턴에 체력을 잃었는지 체크하는 함수
+static void lose_player_hp_by_card_or_power(Player *player, int amount)
+{
+    if (player == NULL) {
+        return;
+    }
+
+    if (amount <= 0) {
+        return;
+    }
+
+    if (player->hp <= 0) {
+        return;
+    }
+
+    player->hp -= amount;
+    player->hp_lost_this_turn += amount;
+
+    if (player->hp < 0) {
+        player->hp = 0;
+    }
+}
+
 //카드 실제 사용 함수
 int play_card(Player *player, Enemy enemies[], int enemy_count, int hand_index, int target_index)
 {
@@ -678,11 +868,14 @@ int play_card(Player *player, Enemy enemies[], int enemy_count, int hand_index, 
     if (card.cost < 0) {
         return 0;
     }
-
+    
     if (player->energy < card.cost) {
         return 0;
     }
 
+    if (!can_use_special_card(player, card)) {
+        return 0;
+    }
     if (!can_use_card_on_target(card, enemies, enemy_count, target_index)) {
         return 0;
     }
@@ -690,11 +883,7 @@ int play_card(Player *player, Enemy enemies[], int enemy_count, int hand_index, 
     player->energy -= card.cost;
 
     if (card.hp_loss > 0) {
-        player->hp -= card.hp_loss;
-
-        if (player->hp < 0) {
-            player->hp = 0;
-        }
+        lose_player_hp_by_card_or_power(player, card.hp_loss);
     }
 
     remove_card_from_hand(player, hand_index);

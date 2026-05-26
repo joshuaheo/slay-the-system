@@ -632,6 +632,120 @@ static const Card card_pool[] = {
     1,
     SPECIAL_DEMON_FORM
 },
+{
+    "조약의 끝",
+    "소멸 카드 더미에 카드가 3장 이상 있을 때만 사용할 수 있습니다. 모든 적에게 피해를 17 줍니다.",
+    CARD_ATTACK,
+    CARD_RARE,
+    TARGET_ALL_ENEMIES,
+    0,
+    17,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    SPECIAL_PACT_END
+},
+{
+    "제압",
+    "취약을 2 부여합니다. 대상 적이 보유한 취약 수치만큼 힘을 얻습니다. 소멸.",
+    CARD_SKILL,
+    CARD_UNCOMMON,
+    TARGET_ENEMY,
+    1,
+    0,
+    0,
+    0,
+    0,
+    2,
+    0,
+    0,
+    0,
+    1,
+    1,
+    SPECIAL_DOMINATE
+},
+{
+    "잊힌 의식",
+    "이번 턴에 카드를 소멸시켰다면 에너지를 3 얻습니다. 소멸.",
+    CARD_SKILL,
+    CARD_UNCOMMON,
+    TARGET_SELF,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    3,
+    0,
+    1,
+    1,
+    SPECIAL_FORGOTTEN_RITUAL
+},
+{
+    "잿빛 타격",
+    "피해를 6 줍니다. 소멸 카드 더미에 있는 카드 1장당 피해량이 3 증가합니다.",
+    CARD_ATTACK,
+    CARD_UNCOMMON,
+    TARGET_ENEMY,
+    1,
+    6,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    SPECIAL_ASHEN_STRIKE
+},
+{
+    "악의",
+    "피해를 5 줍니다. 이번 턴 동안 스스로 체력을 잃었다면 2번 적중합니다.",
+    CARD_ATTACK,
+    CARD_UNCOMMON,
+    TARGET_ENEMY,
+    0,
+    5,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    SPECIAL_SPITE
+},
+{
+    "녹아내리는 주먹",
+    "피해를 10 줍니다. 적이 보유한 취약이 2배로 증가합니다. 소멸.",
+    CARD_ATTACK,
+    CARD_COMMON,
+    TARGET_ENEMY,
+    1,
+    10,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    SPECIAL_MOLTEN_FIST
+},
 };
 
 //카드 덱에 카드가 몇개 있는지 반환하는 함수
@@ -690,7 +804,7 @@ void init_starting_deck(Player *player)
         add_card_to_deck(player, get_card_from_pool(CARD_INDEX_DEFEND));
     }
 
-    add_card_to_deck(player, get_card_from_pool(CARD_INDEX_DEMON_FORM));
+    add_card_to_deck(player, get_card_from_pool(CARD_INDEX_BASH));
 }
 
 //draw_pile 카드 순서를 랜덤하게 섞는 함수
