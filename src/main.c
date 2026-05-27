@@ -2,11 +2,34 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/random.h>
 #include "type.h"
 #include "ui.h"
 #include "login.h"
 #include "save.h"
 #include "game.h"
+
+//랜덤 시드를 만드는 함수 (getrandom()사용, 실패시 timexgetpid 가능)
+static void seed_random_once(void)
+{
+    static int seeded = 0;
+    unsigned int seed;
+    ssize_t result;
+
+    if (seeded) {
+        return;
+    }
+
+    result = getrandom(&seed, sizeof(seed), 0);
+
+    if (result == (ssize_t)sizeof(seed)) {
+        srand(seed);
+    } else {
+        srand((unsigned int)time(NULL) ^ (unsigned int)getpid());
+    }
+
+    seeded = 1;
+}
 
 int main(void) {
     MenuChoice choice;
@@ -14,7 +37,7 @@ int main(void) {
     GameState state;
     int has_save;
 
-    srand((unsigned int)time(NULL) ^ (unsigned int)getpid());
+    seed_random_once();
 
     init_ui();
 
