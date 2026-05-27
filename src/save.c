@@ -1,10 +1,87 @@
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include "save.h"
 #include "login.h"
 
-// username을 이용해 세이브 파일 경로를 생성하는 함수
-int make_save_path(const char *username, char *path, int size) {
+//saves 폴더가 있는지 확인하는 함수 access(), mkdir() 사용
+static int ensure_save_dir(void)
+{
+    if (access(SAVE_DIR, F_OK) == 0) {
+        return 1;
+    }
+
+    if (mkdir(SAVE_DIR, 0755) == 0) {
+        return 1;
+    }
+
+    if (errno == EEXIST) {
+        return 1;
+    }
+
+    return 0;
+}
+
+//세이브 파일에 데이터를 적는 함수 write() 사용
+static int write_all(int fd, const void *buffer, size_t size)
+{
+    const char *ptr = (const char *)buffer;
+    size_t total = 0;
+
+    while (total < size) {
+        ssize_t written = write(fd, ptr + total, size - total);
+
+        if (written < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            return 0;
+        }
+
+        if (written == 0) {
+            return 0;
+        }
+
+        total += written;
+    }
+
+    return 1;
+}
+
+//세이브 파일에서 데이터를 읽는 함수 read() 사용
+static int read_all(int fd, void *buffer, size_t size)
+{
+    char *ptr = (char *)buffer;
+    size_t total = 0;
+
+    while (total < size) {
+        ssize_t read_size = read(fd, ptr + total, size - total);
+
+        if (read_size < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            return 0;
+        }
+
+        if (read_size == 0) {
+            return 0;
+        }
+
+        total += read_size;
+    }
+
+    return 1;
+}
+
+//세이브 파일 경로를 만드는 함수 
+int make_save_path(const char *username, char *path, int size)
+{
     if (username == NULL || path == NULL || size <= 0) {
         return 0;
     }
@@ -13,10 +90,10 @@ int make_save_path(const char *username, char *path, int size) {
     return 1;
 }
 
-//해당 username의 세이브 파일 존재 여부 확인
-int save_file_exists(const char *username) {
+//해당 유저의 세이브 파일이 존재하는지 확인하는 함수 access() 사용
+int save_file_exists(const char *username)
+{
     char path[256];
-    FILE *fp;
 
     if (!is_valid_username(username)) {
         return 0;
@@ -26,19 +103,14 @@ int save_file_exists(const char *username) {
         return 0;
     }
 
-    fp = fopen(path, "rb");
-    if (fp == NULL) {
-        return 0;
-    }
-
-    fclose(fp);
-    return 1;
+    return access(path, F_OK) == 0;
 }
 
-// GameState 구조체를 username에 해당하는 세이브 파일에 저장하는 함수.
-int save_game(const GameState *state) {
+//게임 저장 함수 open(), write(), fsync(), close() 사용
+int save_game(const GameState *state)
+{
     char path[256];
-    FILE *fp;
+    int fd;
 
     if (state == NULL) {
         return 0;
@@ -48,28 +120,41 @@ int save_game(const GameState *state) {
         return 0;
     }
 
+    if (!ensure_save_dir()) {
+        return 0;
+    }
+
     if (!make_save_path(state->username, path, sizeof(path))) {
         return 0;
     }
 
-    fp = fopen(path, "wb");
-    if (fp == NULL) {
+    fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0) {
         return 0;
     }
 
-    if (fwrite(state, sizeof(GameState), 1, fp) != 1) {
-        fclose(fp);
+    if (!write_all(fd, state, sizeof(GameState))) {
+        close(fd);
         return 0;
     }
 
-    fclose(fp);
+    if (fsync(fd) != 0) {
+        close(fd);
+        return 0;
+    }
+
+    if (close(fd) != 0) {
+        return 0;
+    }
+
     return 1;
 }
 
-// username에 해당하는 세이브 파일에서 GameState를 읽어와 복원한다.
-int load_game(const char *username, GameState *state) {
+//게임 로드 함수 open(), read(), close() 사용
+int load_game(const char *username, GameState *state)
+{
     char path[256];
-    FILE *fp;
+    int fd;
 
     if (username == NULL || state == NULL) {
         return 0;
@@ -83,22 +168,26 @@ int load_game(const char *username, GameState *state) {
         return 0;
     }
 
-    fp = fopen(path, "rb");
-    if (fp == NULL) {
+    fd = open(path, O_RDONLY);
+    if (fd < 0) {
         return 0;
     }
 
-    if (fread(state, sizeof(GameState), 1, fp) != 1) {
-        fclose(fp);
+    if (!read_all(fd, state, sizeof(GameState))) {
+        close(fd);
         return 0;
     }
 
-    fclose(fp);
+    if (close(fd) != 0) {
+        return 0;
+    }
+
     return 1;
 }
 
-//세이브 파일을 지우는 함수
-int delete_save_file(const char *username) {
+//세이브 파일 삭제 함수 unlink() 사용
+int delete_save_file(const char *username)
+{
     char path[256];
 
     if (!is_valid_username(username)) {
@@ -109,7 +198,7 @@ int delete_save_file(const char *username) {
         return 0;
     }
 
-    if (remove(path) != 0) {
+    if (unlink(path) != 0) {
         return 0;
     }
 
