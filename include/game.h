@@ -11,4 +11,7 @@ int handle_battle_lose(GameState *state);
 
 int run_current_stage(GameState *state);
 
+void start_play_timer(void);
+void update_play_time(GameState *state);
+
 #endif

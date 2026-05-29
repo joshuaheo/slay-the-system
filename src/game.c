@@ -1,4 +1,5 @@
 #include <string.h>
+#include <time.h>
 #include "game.h"
 #include "card.h"
 #include "ui.h"
@@ -11,6 +12,7 @@
 
 static int run_chest_stage(GameState *state);
 static int run_rest_stage(GameState *state);
+static time_t g_play_session_start_time = 0;
 
 // Player에 대한 정보를 게임 시작 상태로 초기화하는 함수
 void init_new_game(GameState *state, const char *username) {
@@ -28,6 +30,7 @@ void init_new_game(GameState *state, const char *username) {
     state->floor = 1;
 
     player = &state->player;
+    state->play_time_seconds = 0;
 
     strncpy(player->name, username, MAX_NAME_LEN - 1);
     player->name[MAX_NAME_LEN - 1] = '\0';
@@ -78,6 +81,29 @@ void cleanup_after_battle(Player *player) {
     player->energy = player->max_energy;
 }
 
+//타이머 시작 함수
+void start_play_timer(void)
+{
+    g_play_session_start_time = time(NULL);
+}
+
+//플레이 타임 업데이트 함수
+void update_play_time(GameState *state)
+{
+    time_t now;
+
+    if (state == NULL || g_play_session_start_time == 0) {
+        return;
+    }
+
+    now = time(NULL);
+
+    if (now > g_play_session_start_time) {
+        state->play_time_seconds += (long)(now - g_play_session_start_time);
+        g_play_session_start_time = now;
+    }
+}
+
 //상점 스테이지 실행 함수
 static int run_shop_stage(GameState *state)
 {
@@ -94,7 +120,7 @@ static int run_shop_stage(GameState *state)
     }
 
     state->floor++;
-
+    update_play_time(state);
     if (!save_game(state)) {
         return 0;
     }
@@ -117,6 +143,8 @@ int handle_battle_win(GameState *state, StageType stage)
 
     state->floor++;
 
+    update_play_time(state);
+
     if (!save_game(state)) {
         return 0;
     }
@@ -129,6 +157,9 @@ int handle_battle_lose(GameState *state) {
     if (state == NULL) {
         return 0;
     }
+
+    update_play_time(state);
+    show_game_over_screen(state);
 
     delete_save_file(state->username, state->save_slot);
 
@@ -168,6 +199,9 @@ int run_current_stage(GameState *state) {
         if (battle_result == BATTLE_WIN) {
             if (stage == STAGE_BOSS || state->floor == MAX_FLOOR) {
                 cleanup_after_battle(&state->player);
+                update_play_time(state);
+                show_game_clear_screen(state);
+
                 delete_save_file(state->username, state->save_slot);
                 return 0;
             }
@@ -222,6 +256,7 @@ static int run_rest_stage(GameState *state)
             show_rest_result_screen(healed, &state->player);
 
             state->floor++;
+            update_play_time(state);
 
             if (!save_game(state)) {
                 return 0;
@@ -252,6 +287,7 @@ if (!remove_card_from_deck(&state->player, remove_index)) {
 show_card_removed_screen(&removed_card);
 
             state->floor++;
+            update_play_time(state);
 
             if (!save_game(state)) {
                 return 0;
@@ -278,7 +314,12 @@ static int run_chest_stage(GameState *state)
     }
 
     state->floor++;
-    save_game(state);
+
+    update_play_time(state);
+
+    if (!save_game(state)) {
+        return 0;
+    }
 
     return 1;
 }

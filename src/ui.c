@@ -2989,3 +2989,135 @@ StageType show_stage_choice_screen(int floor, const MapFloor *map_floor)
     }
 }
 
+static void show_run_result_screen(GameState *state, int is_clear)
+{
+    int selected = 0;
+    int ch;
+    int i;
+    int row;
+    long total;
+    long hours;
+    long minutes;
+    long seconds;
+    char line[256];
+
+    const char *items[] = {
+        "덱 자세히 보기",
+        "유물 자세히 보기",
+        "마치기"
+    };
+
+    if (state == NULL) {
+        return;
+    }
+
+    while (1) {
+        clear();
+
+        if (is_clear) {
+            mvprintw(1, 3, "==================== 게임 클리어 ====================");
+            mvprintw(3, 5, "최종 보스를 처치했습니다!");
+        } else {
+            mvprintw(1, 3, "==================== 게임 오버 ====================");
+            mvprintw(3, 5, "플레이어가 쓰러졌습니다.");
+        }
+
+        total = state->play_time_seconds;
+        if (total < 0) {
+            total = 0;
+        }
+
+        hours = total / 3600;
+        minutes = (total % 3600) / 60;
+        seconds = total % 60;
+
+        mvprintw(6, 5, "------------------ 기록 ------------------");
+
+        snprintf(line, sizeof(line), "플레이어       : %s", state->username);
+        mvprintw(8, 5, "%s", line);
+
+        mvprintw(9, 5, "플레이 시간    : %02ld:%02ld:%02ld",
+                 hours, minutes, seconds);
+
+        mvprintw(10, 5, "남은 체력      : %d / %d",
+                 state->player.hp, state->player.max_hp);
+
+        mvprintw(11, 5, "보유 골드      : %d",
+                 state->player.gold);
+
+        mvprintw(12, 5, "덱 카드 수     : %d장",
+                 state->player.owned_deck_count);
+
+        mvprintw(13, 5, "보유 유물 수   : %d개",
+                 state->player.relic_count);
+
+        if (is_clear) {
+            mvprintw(15, 5, "클리어한 세이브 파일은 종료 후 삭제됩니다.");
+        } else {
+            mvprintw(15, 5, "사망하여 해당 세이브 파일은 삭제됩니다.");
+        }
+
+        row = 18;
+
+        for (i = 0; i < 3; i++) {
+            if (selected == i) {
+                attron(A_REVERSE);
+                mvprintw(row + i * 2, 7, "%s", items[i]);
+                attroff(A_REVERSE);
+            } else {
+                mvprintw(row + i * 2, 7, "%s", items[i]);
+            }
+        }
+
+        mvprintw(LINES - 3, 3, "↑ ↓ : 이동");
+        mvprintw(LINES - 2, 3, "ENTER : 선택");
+
+        refresh();
+
+        ch = getch();
+
+        if (ch == KEY_UP) {
+            selected--;
+
+            if (selected < 0) {
+                selected = 2;
+            }
+        } else if (ch == KEY_DOWN) {
+            selected++;
+
+            if (selected > 2) {
+                selected = 0;
+            }
+        } else if (ch == '\n' || ch == KEY_ENTER) {
+            if (selected == 0) {
+                show_card_pile_screen("덱 목록",
+                                      state->player.owned_deck,
+                                      state->player.owned_deck_count,
+                                      0);
+            } else if (selected == 1) {
+                show_relic_inventory_screen(&state->player);
+            } else {
+                break;
+            }
+        } else if (ch == '1') {
+            show_card_pile_screen("덱 목록",
+                                  state->player.owned_deck,
+                                  state->player.owned_deck_count,
+                                  0);
+        } else if (ch == '2') {
+            show_relic_inventory_screen(&state->player);
+        } else if (ch == '3' || ch == 'q' || ch == 'Q') {
+            break;
+        }
+    }
+}
+
+void show_game_clear_screen(GameState *state)
+{
+    show_run_result_screen(state, 1);
+}
+
+void show_game_over_screen(GameState *state)
+{
+    show_run_result_screen(state, 0);
+}

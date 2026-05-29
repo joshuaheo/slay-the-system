@@ -100,7 +100,7 @@ int main(void) {
                         return 1;
                     }
                 }
-
+                start_play_timer();
                 while (state.floor <= MAX_FLOOR) {
                     if (!run_current_stage(&state)) {
                         break;

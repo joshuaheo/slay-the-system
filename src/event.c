@@ -5,6 +5,7 @@
 #include "save.h"
 #include "ui.h"
 #include "card.h"
+#include "game.h"
 
 #define EVENT_COUNT 5
 
@@ -14,6 +15,7 @@
 #define EVENT_AMALGAMATOR 3
 #define EVENT_SUNKEN_TREASURY 4
 
+#if 1
 static int run_random_event(GameState *state);
 static int run_mutating_forest_event(GameState *state);
 static int remove_one_card_by_choice(Player *player, Card *removed_card);
@@ -32,7 +34,7 @@ static int can_run_amalgamator_event(const Player *player);
 static int count_cards_by_name_prefix(const Player *player, const char *prefix);
 static int remove_first_card_by_name_prefix(Player *player, const char *prefix);
 static int run_sunken_treasury_event(GameState *state);
-
+#endif
 //공격카드에 오염을 추가하는 함수
 static int has_attack_card_to_corrupt(const Player *player)
 {
@@ -217,7 +219,7 @@ int run_event_stage(GameState *state)
     }
 
     state->floor++;
-
+    update_play_time(state);
     if (!save_game(state)) {
         return 0;
     }

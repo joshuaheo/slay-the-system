@@ -33,7 +33,6 @@ void show_card_remove_unavailable_screen(void);
 void show_relic_obtained_screen(const char *title, const Relic *relic);
 void show_no_relic_available_screen(void);
 
-void show_deck_screen(const Player *player);
 void show_relic_inventory_screen(const Player *player);
 
 void show_card_detail_screen(const Card *card);
@@ -68,4 +67,7 @@ StageType show_stage_choice_screen(int floor, const MapFloor *map_floor);
 
 int show_save_slot_screen(const char *username);
 SaveSlotAction show_save_slot_action_screen(const char *username, int slot);
+
+void show_game_clear_screen(GameState *state);
+void show_game_over_screen(GameState *state);
 #endif

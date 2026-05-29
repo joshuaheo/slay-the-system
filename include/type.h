@@ -318,6 +318,7 @@ typedef struct {
  
     int floor; //마지막으로 클리어한 층
     int save_slot;
+    long play_time_seconds;
 } GameState;
 
 #endif
