@@ -6,7 +6,8 @@
 typedef enum {
     BATTLE_CONTINUE,
     BATTLE_WIN,
-    BATTLE_LOSE
+    BATTLE_LOSE,
+    BATTLE_QUIT
 } BattleResult;
 
 int play_card(Player *player, Enemy enemies[], int enemy_count, int hand_index, int target_index);

@@ -213,6 +213,9 @@ int run_current_stage(GameState *state) {
             handle_battle_lose(state);
             return 0;
         }
+        if (battle_result == BATTLE_QUIT) {
+            return 0;
+        }
 
         return 0;
 

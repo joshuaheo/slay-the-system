@@ -2,12 +2,30 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <signal.h>
 #include <sys/random.h>
 #include "type.h"
 #include "ui.h"
 #include "login.h"
 #include "save.h"
 #include "game.h"
+
+volatile sig_atomic_t g_quit_requested = 0;
+
+//핸들러 함수
+static void handle_sigint(int sig)
+{
+    (void)sig;
+    g_quit_requested = 1;
+}
+
+//시그널 콜 호출시 나오는 메시지
+static void exit_safely_after_sigint(void)
+{
+    close_ui();
+    printf("Ctrl+C 입력으로 안전 종료되었습니다.\n");
+    printf("전투 중 상태는 저장되지 않으며, 마지막 자동저장 지점부터 재개됩니다.\n");
+}
 
 //랜덤 시드를 만드는 함수 (getrandom()사용, 실패시 time * getpid 가능)
 static void seed_random_once(void)
@@ -37,12 +55,16 @@ int main(void) {
     GameState state;
     int slot;
     SaveSlotAction action;
-
+    signal(SIGINT, handle_sigint);
     seed_random_once();
 
     init_ui();
 
     while (1) {
+        if (g_quit_requested) {
+            exit_safely_after_sigint();
+            return 0;
+        }
         choice = show_start_screen();
 
         if (choice == MENU_EXIT) {
@@ -102,11 +124,24 @@ int main(void) {
                 }
                 start_play_timer();
                 while (state.floor <= MAX_FLOOR) {
+                    if (g_quit_requested) {
+                        exit_safely_after_sigint();
+                        return 0;
+                    }
+
                     if (!run_current_stage(&state)) {
+                        if (g_quit_requested) {
+                            exit_safely_after_sigint();
+                            return 0;
+                        }
                         break;
                     }
                 }
 
+                if (g_quit_requested) {
+                    exit_safely_after_sigint();
+                    return 0;
+                }
                 break;
             }
         }

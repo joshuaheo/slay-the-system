@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <ncurses.h>
 #include <string.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <wchar.h>
 #include "battle.h"
@@ -14,6 +15,8 @@
 #include "shop.h"
 #include "map.h"
 #include "save.h"
+
+extern volatile sig_atomic_t g_quit_requested;
 
 #if 1
 static void show_card_pile_screen(const char *title,const Card *cards,int count,int reverse_order);
@@ -532,6 +535,9 @@ BattleResult show_temp_battle_screen(GameState *state, StageType stage)
     if (state == NULL) {
         return BATTLE_CONTINUE;
     }
+    if (g_quit_requested) {
+        return BATTLE_QUIT;
+    }
 
     player = &state->player;
     player->exhausted_this_turn = 0;
@@ -548,6 +554,10 @@ if (final_result != BATTLE_CONTINUE) {
 }
 
     while (1) {
+        if (g_quit_requested) {        
+            final_result = BATTLE_QUIT;
+            break;
+        }
         start_y = (LINES - battle_height) / 3;
         start_x = (COLS - battle_width) / 2;
 
@@ -565,6 +575,10 @@ if (final_result != BATTLE_CONTINUE) {
         draw_temp_battle_screen(state,enemies,enemy_count,target_index,selected,max_display_hand,battle_width,battle_height,card_slot_width);
 
         ch = getch();
+        if (g_quit_requested) {
+            final_result = BATTLE_QUIT;
+            break;        
+        }
 
         if (ch == KEY_LEFT || ch == 'a' || ch == 'A') {
             if (hand_count > 0) {
