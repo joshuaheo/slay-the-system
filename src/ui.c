@@ -13,6 +13,7 @@
 #include "reward.h"
 #include "shop.h"
 #include "map.h"
+#include "save.h"
 
 #if 1
 static void show_card_pile_screen(const char *title,const Card *cards,int count,int reverse_order);
@@ -240,6 +241,203 @@ void show_invalid_username_screen(void) {
 
     refresh();
     getch();
+}
+
+//저장 슬롯 화면 
+int show_save_slot_screen(const char *username)
+{
+    int selected = 0;
+    int ch;
+    int i;
+    int row;
+    char line[256];
+    char time_text[64];
+    GameState temp_state;
+    int floor;
+
+    if (username == NULL) {
+        return 0;
+    }
+
+    while (1) {
+        clear();
+
+        print_logo(3);
+        print_centered(11, "세이브 슬롯 선택");
+
+        snprintf(line, sizeof(line), "User: %s", username);
+        print_centered(13, line);
+
+        row = 16;
+
+        for (i = 0; i < MAX_SAVE_SLOTS; i++) {
+            int slot = i + 1;
+
+            if (save_file_exists(username, slot)) {
+                if (load_game(username, slot, &temp_state)) {
+                    floor = temp_state.floor;
+                } else {
+                    floor = -1;
+                }
+                if (get_save_modified_time_string(username, slot, time_text, sizeof(time_text))) {
+                    if (floor > 0) {
+                        snprintf(line, sizeof(line),
+                        "게임 %d  [저장됨]  %d층  마지막 저장: %s",
+                        slot, floor, time_text);
+                    } else {
+                        snprintf(line, sizeof(line),
+                        "게임 %d  [저장됨]  층 정보 없음  마지막 저장: %s",
+                        slot, time_text);
+                    }
+                } else {
+                    if (floor > 0) {
+                        snprintf(line, sizeof(line),
+                        "게임 %d  [저장됨]  %d층  마지막 저장: 알 수 없음",
+                        slot, floor);
+                    } else {
+                        snprintf(line, sizeof(line),
+                        "게임 %d  [저장됨]  층 정보 없음  마지막 저장: 알 수 없음",
+                        slot);
+                    }
+                }
+            } else {
+                snprintf(line, sizeof(line), "게임 %d  [비어 있음]", slot);
+            }
+
+            if (selected == i) {
+                attron(A_REVERSE);
+                print_centered(row + i * 2, line);
+                attroff(A_REVERSE);
+            } else {
+                print_centered(row + i * 2, line);
+            }
+        }
+
+        if (selected == MAX_SAVE_SLOTS) {
+            attron(A_REVERSE);
+            print_centered(row + MAX_SAVE_SLOTS * 2, "뒤로가기");
+            attroff(A_REVERSE);
+        } else {
+            print_centered(row + MAX_SAVE_SLOTS * 2, "뒤로가기");
+        }
+
+        print_centered(row + MAX_SAVE_SLOTS * 2 + 3, "방향키와 엔터로 선택하세요.");
+        refresh();
+
+        ch = getch();
+
+        if (ch == KEY_UP) {
+            selected--;
+            if (selected < 0) {
+                selected = MAX_SAVE_SLOTS;
+            }
+        } else if (ch == KEY_DOWN) {
+            selected++;
+            if (selected > MAX_SAVE_SLOTS) {
+                selected = 0;
+            }
+        } else if (ch == '\n' || ch == KEY_ENTER) {
+            if (selected == MAX_SAVE_SLOTS) {
+                return 0;
+            }
+            return selected + 1;
+        } else if (ch >= '1' && ch <= '3') {
+            return ch - '0';
+        } else if (ch == 'q' || ch == 'Q') {
+            return 0;
+        }
+    }
+}
+
+//저장된 슬롯 선택 후 행동 화면
+SaveSlotAction show_save_slot_action_screen(const char *username, int slot)
+{
+    int selected = 0;
+    int ch;
+    int i;
+    int row;
+    char line[256];
+    char time_text[64];
+    GameState temp_state;
+    int floor;
+    const char *items[] = {
+        "이어하기",
+        "새 게임으로 덮어쓰기",
+        "뒤로가기"
+    };
+
+    if (username == NULL) {
+        return SAVE_ACTION_BACK;
+    }
+
+    while (1) {
+        clear();
+
+        print_logo(3);
+
+        snprintf(line, sizeof(line), "게임 %d", slot);
+        print_centered(11, line);
+        if (load_game(username, slot, &temp_state)) {
+            floor = temp_state.floor;
+        } else {
+            floor = -1;
+        }
+        if (floor > 0) {
+            snprintf(line, sizeof(line), "현재 층: %d층", floor);
+        } else {
+            snprintf(line, sizeof(line), "현재 층: 알 수 없음");
+        }
+        print_centered(13, line);
+
+        if (get_save_modified_time_string(username, slot, time_text, sizeof(time_text))) {
+            snprintf(line, sizeof(line), "마지막 저장: %s", time_text);
+        } else {
+            snprintf(line, sizeof(line), "마지막 저장: 알 수 없음");
+        }
+        print_centered(15, line);
+        row = 18;
+
+        for (i = 0; i < 3; i++) {
+            if (selected == i) {
+                attron(A_REVERSE);
+                print_centered(row + i * 2, items[i]);
+                attroff(A_REVERSE);
+            } else {
+                print_centered(row + i * 2, items[i]);
+            }
+        }
+
+        print_centered(row + 8, "방향키와 엔터로 선택하세요.");
+        refresh();
+
+        ch = getch();
+
+        if (ch == KEY_UP) {
+            selected--;
+            if (selected < 0) {
+                selected = 2;
+            }
+        } else if (ch == KEY_DOWN) {
+            selected++;
+            if (selected > 2) {
+                selected = 0;
+            }
+        } else if (ch == '\n' || ch == KEY_ENTER) {
+            if (selected == 0) {
+                return SAVE_ACTION_LOAD;
+            }
+            if (selected == 1) {
+                return SAVE_ACTION_NEW;
+            }
+            return SAVE_ACTION_BACK;
+        } else if (ch == '1') {
+            return SAVE_ACTION_LOAD;
+        } else if (ch == '2') {
+            return SAVE_ACTION_NEW;
+        } else if (ch == '3' || ch == 'q' || ch == 'Q') {
+            return SAVE_ACTION_BACK;
+        }
+    }
 }
 
 //전투 부분 ui 함수
@@ -2790,3 +2988,4 @@ StageType show_stage_choice_screen(int floor, const MapFloor *map_floor)
         }
     }
 }
+

@@ -130,7 +130,7 @@ int handle_battle_lose(GameState *state) {
         return 0;
     }
 
-    delete_save_file(state->username);
+    delete_save_file(state->username, state->save_slot);
 
     return 1;
 }
@@ -168,7 +168,7 @@ int run_current_stage(GameState *state) {
         if (battle_result == BATTLE_WIN) {
             if (stage == STAGE_BOSS || state->floor == MAX_FLOOR) {
                 cleanup_after_battle(&state->player);
-                delete_save_file(state->username);
+                delete_save_file(state->username, state->save_slot);
                 return 0;
             }
 

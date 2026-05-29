@@ -8,6 +8,12 @@ typedef enum {
     MENU_EXIT = 2
 } MenuChoice;
 
+typedef enum {
+    SAVE_ACTION_BACK = 0,
+    SAVE_ACTION_LOAD = 1,
+    SAVE_ACTION_NEW = 2
+} SaveSlotAction;
+
 void init_ui(void);
 void close_ui(void);
 MenuChoice show_start_screen(void);
@@ -59,4 +65,7 @@ int show_sunken_treasury_event_screen(void);
 void show_sunken_treasury_result_screen(int choice, int gold_gain, const Card *added_card, const Player *player);
 
 StageType show_stage_choice_screen(int floor, const MapFloor *map_floor);
+
+int show_save_slot_screen(const char *username);
+SaveSlotAction show_save_slot_action_screen(const char *username, int slot);
 #endif

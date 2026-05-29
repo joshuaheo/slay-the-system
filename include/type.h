@@ -9,6 +9,7 @@
 #define MAX_FLOOR 15
 #define MAX_STAGE_CHOICES 2
 #define MAX_ACTIVE_POWERS 20
+#define MAX_SAVE_SLOTS 3
 
 //카드 타입
 typedef enum {
@@ -316,6 +317,7 @@ typedef struct {
     Player player;
  
     int floor; //마지막으로 클리어한 층
+    int save_slot;
 } GameState;
 
 #endif

@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "save.h"
 #include "login.h"
@@ -80,26 +81,30 @@ static int read_all(int fd, void *buffer, size_t size)
 }
 
 //세이브 파일 경로를 만드는 함수 
-int make_save_path(const char *username, char *path, int size)
+int make_save_path(const char *username, int slot, char *path, int size)
 {
     if (username == NULL || path == NULL || size <= 0) {
         return 0;
     }
 
-    snprintf(path, size, "%s/%s%s", SAVE_DIR, username, SAVE_EXT);
-    return 1;
-}
-
-//해당 유저의 세이브 파일이 존재하는지 확인하는 함수 access() 사용
-int save_file_exists(const char *username)
-{
-    char path[256];
-
     if (!is_valid_username(username)) {
         return 0;
     }
 
-    if (!make_save_path(username, path, sizeof(path))) {
+    if (slot < 1 || slot > MAX_SAVE_SLOTS) {
+        return 0;
+    }
+
+    snprintf(path, size, "%s/%s_%d%s", SAVE_DIR, username, slot, SAVE_EXT);
+    return 1;
+}
+
+//해당 유저의 세이브 파일이 존재하는지 확인하는 함수 access() 사용
+int save_file_exists(const char *username, int slot)
+{
+    char path[256];
+
+    if (!make_save_path(username, slot, path, sizeof(path))) {
         return 0;
     }
 
@@ -124,8 +129,8 @@ int save_game(const GameState *state)
         return 0;
     }
 
-    if (!make_save_path(state->username, path, sizeof(path))) {
-        return 0;
+    if (!make_save_path(state->username, state->save_slot, path, sizeof(path))) {
+    return 0;
     }
 
     fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -151,7 +156,7 @@ int save_game(const GameState *state)
 }
 
 //게임 로드 함수 open(), read(), close() 사용
-int load_game(const char *username, GameState *state)
+int load_game(const char *username, int slot, GameState *state)
 {
     char path[256];
     int fd;
@@ -160,11 +165,7 @@ int load_game(const char *username, GameState *state)
         return 0;
     }
 
-    if (!is_valid_username(username)) {
-        return 0;
-    }
-
-    if (!make_save_path(username, path, sizeof(path))) {
+    if (!make_save_path(username, slot, path, sizeof(path))) {
         return 0;
     }
 
@@ -182,23 +183,55 @@ int load_game(const char *username, GameState *state)
         return 0;
     }
 
+    state->save_slot = slot;
+
     return 1;
 }
 
 //세이브 파일 삭제 함수 unlink() 사용
-int delete_save_file(const char *username)
+int delete_save_file(const char *username, int slot)
 {
     char path[256];
 
-    if (!is_valid_username(username)) {
-        return 0;
-    }
-
-    if (!make_save_path(username, path, sizeof(path))) {
+    if (!make_save_path(username, slot, path, sizeof(path))) {
         return 0;
     }
 
     if (unlink(path) != 0) {
+        if (errno == ENOENT) {
+            return 1;
+        }
+        return 0;
+    }
+
+    return 1;
+}
+
+//마지막 저장 함수 시간 추가 함수 stat() 사용
+int get_save_modified_time_string(const char *username, int slot, char *buffer, int size)
+{
+    char path[256];
+    struct stat st;
+    struct tm *time_info;
+
+    if (buffer == NULL || size <= 0) {
+        return 0;
+    }
+
+    if (!make_save_path(username, slot, path, sizeof(path))) {
+        return 0;
+    }
+
+    if (stat(path, &st) != 0) {
+        return 0;
+    }
+
+    time_info = localtime(&st.st_mtime);
+    if (time_info == NULL) {
+        return 0;
+    }
+
+    if (strftime(buffer, size, "%Y-%m-%d %H:%M:%S", time_info) == 0) {
         return 0;
     }
 
