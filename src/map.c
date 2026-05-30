@@ -5,18 +5,18 @@
 //전체 스테이지 목록
 static const MapFloor fixed_map[MAX_FLOOR] = {
     {{STAGE_ENEMY}, 1},
-    {{STAGE_ENEMY, STAGE_EVENT}, 2},
+    {{STAGE_EVENT, STAGE_ENEMY}, 2},
     {{STAGE_ENEMY}, 1},
     {{STAGE_SHOP, STAGE_ENEMY}, 2},
     {{STAGE_ENEMY, STAGE_EVENT}, 2},
     {{STAGE_ENEMY, STAGE_REST}, 2},
-    {{STAGE_EVENT, STAGE_ELITE}, 2},
+    {{STAGE_ELITE, STAGE_EVENT}, 2},
     {{STAGE_ENEMY}, 1},
     {{STAGE_CHEST}, 1},
     {{STAGE_SHOP, STAGE_ENEMY}, 2},
     {{STAGE_ENEMY, STAGE_REST}, 2},
-    {{STAGE_ENEMY, STAGE_ELITE}, 2},
-    {{STAGE_ENEMY, STAGE_EVENT}, 2},
+    {{STAGE_ELITE, STAGE_ENEMY}, 2},
+    {{STAGE_ENEMY}, 1},
     {{STAGE_REST}, 1},
     {{STAGE_BOSS}, 1}
 };

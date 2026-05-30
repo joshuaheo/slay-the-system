@@ -3,6 +3,7 @@
 
 #include "shop.h"
 #include "card.h"
+#include "player.h"
 #include "relic.h"
 
 //랜덤 숫자 출력 함수
@@ -415,8 +416,6 @@ ShopBuyResult buy_shop_item(Player *player, ShopItem *item)
 //카드 제거를 구매한 경우 작동하는 함수
 ShopBuyResult buy_shop_remove_card(Player *player, ShopItem *item, int deck_index)
 {
-    int i;
-
     if (player == NULL || item == NULL || !item->available) {
         return SHOP_BUY_INVALID;
     }
@@ -441,13 +440,11 @@ ShopBuyResult buy_shop_remove_card(Player *player, ShopItem *item, int deck_inde
         return SHOP_BUY_INVALID;
     }
 
-    player->gold -= item->price;
-
-    for (i = deck_index; i < player->owned_deck_count - 1; i++) {
-        player->owned_deck[i] = player->owned_deck[i + 1];
+    if (!remove_card_from_deck(player, deck_index)) {
+        return SHOP_BUY_REMOVE_UNAVAILABLE;
     }
 
-    player->owned_deck_count--;
+    player->gold -= item->price;
     item->sold = 1;
 
     return SHOP_BUY_OK;

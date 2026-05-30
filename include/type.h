@@ -8,18 +8,52 @@
 #define MAX_ENEMIES 3
 #define MAX_FLOOR 15
 #define MAX_STAGE_CHOICES 2
+#define MAX_ACTIVE_POWERS 20
+#define MAX_SAVE_SLOTS 3
 
 //카드 타입
 typedef enum {
     CARD_ATTACK,
     CARD_SKILL,
-    CARD_POWER
+    CARD_POWER,
+    CARD_STATUS
 } CardType;
 
 //공용구조체로만 해결되지 않는 카드들
 typedef enum {
-    SPECIAL_NONE
+    SPECIAL_NONE,
+    SPECIAL_FIEND_FIRE,
+    SPECIAL_CRIMSON_MANTLE,
+    SPECIAL_PYRE,
+    SPECIAL_DEMON_FORM,
+    SPECIAL_PACT_END,
+    SPECIAL_DOMINATE,
+    SPECIAL_FORGOTTEN_RITUAL,
+    SPECIAL_ASHEN_STRIKE,
+    SPECIAL_SPITE,
+    SPECIAL_MOLTEN_FIST
 } SpecialEffect;
+
+//파워카드 발동 시점
+typedef enum {
+    POWER_TRIGGER_NONE,
+    POWER_TRIGGER_TURN_START
+} PowerTrigger;
+
+//파워카드 턴별 발동
+typedef struct {
+    SpecialEffect special;
+    PowerTrigger trigger;
+
+    int hp_loss;
+    int block;
+    int strength;
+    int weak;
+    int vulnerable;
+    int damage;
+    int energy;
+    int draw;
+} ActivePower;
 
 //카드 대상범위(개인,전체,무작위,스스로(ex-방어))
 typedef enum {
@@ -28,6 +62,25 @@ typedef enum {
     TARGET_ALL_ENEMIES,
     TARGET_RANDOM_ENEMY
 } TargetType;
+
+//적 구분 구조체
+typedef enum {
+    ENEMY_SLIME,
+    ENEMY_JAW_WORM,
+    ENEMY_SEAPUNK,
+    ENEMY_FUZZY_WURM_CRAWLER,
+    ENEMY_SHRINKER_BEETLE,
+    ENEMY_SLUDGE_SPINNER,
+    ENEMY_MAWLER,
+    ENEMY_INLET,
+    ENEMY_CUBEX_CONSTRUCT,
+    ENEMY_LEAF_SLIME,
+    ENEMY_TWIG_SLIME,
+    ENEMY_BYGONE_EFFIGY,
+    ENEMY_BYRDONIS,
+    ENEMY_TERROR_EEL,
+    ENEMY_VANTOM
+} EnemyId;
 
 //카드 희귀도(시작,일반,고급,희귀)
 typedef enum {
@@ -75,6 +128,21 @@ typedef enum {
     RELIC_PEAR,
     RELIC_OLD_COIN,
     RELIC_LEES_WAFFLE,
+    RELIC_PLANISPHERE,
+    RELIC_CANDELABRA,
+    RELIC_MERCURY_HOURGLASS,
+    RELIC_BAG_OF_MARBLES,
+    RELIC_STRAWBERRY,
+    RELIC_LANTERN,
+    RELIC_RED_MASK,
+    RELIC_BAG_OF_PREPARATION,
+    RELIC_MANGO,
+    RELIC_CHANDELIER,
+    RELIC_BRIMSTONE,
+    RELIC_CAPTAINS_WHEEL,
+    RELIC_ICE_CREAM,
+    RELIC_STONE_CALENDAR,
+    RELIC_HAPPY_FLOWER,
 
     RELIC_COUNT
  } RelicId;
@@ -124,10 +192,16 @@ typedef struct {
     Card exhaust_pile[MAX_DECK_SIZE];
     int exhaust_count;
 
+    int exhausted_this_turn;
+    int hp_lost_this_turn;
+
     int gold;
 
     Relic relics[MAX_RELICS];
     int relic_count;
+
+    ActivePower active_powers[MAX_ACTIVE_POWERS];
+    int active_power_count;
 
     int energy;
     int max_energy;
@@ -162,6 +236,13 @@ typedef struct {
     Relic relic;
 } ShopItem;
 
+//적의 종류 구분 구조체
+typedef enum {
+    ENEMY_NORMAL,
+    ENEMY_ELITE,
+    ENEMY_BOSS
+} EnemyGrade;
+
 //상점 구조체
 typedef struct {
     ShopItem items[SHOP_ITEM_COUNT];
@@ -170,6 +251,9 @@ typedef struct {
 
 //적 상태
 typedef struct {
+    EnemyId id;
+    EnemyGrade grade;
+
     char name[MAX_NAME_LEN];
 
     int max_hp;
@@ -181,7 +265,25 @@ typedef struct {
     int vulnerable;
 
     int damage;
+
+    int turn_count;
+    int pattern_index;
+    int special_state;
 } Enemy;
+
+//한턴별 적의 행동 공용 구조체
+typedef struct {
+    int damage;
+    int hit_count;
+
+    int block;
+    int strength;
+
+    int weak;
+    int vulnerable;
+
+    int has_attack;
+} EnemyMove;
 
 //게임상태
 typedef enum {
@@ -215,6 +317,8 @@ typedef struct {
     Player player;
  
     int floor; //마지막으로 클리어한 층
+    int save_slot;
+    long play_time_seconds;
 } GameState;
 
 #endif

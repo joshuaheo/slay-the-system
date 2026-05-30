@@ -2,7 +2,13 @@
 
 #include "player.h"
 #include "relic.h"
+<<<<<<< HEAD
 #include "game.h"
+=======
+#include "card.h"
+
+static void deal_relic_damage_to_enemy(Enemy *enemy, int damage);
+>>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c
 
 //유물 목록
 static const Relic relic_pool[] = {
@@ -41,7 +47,97 @@ static const Relic relic_pool[] = {
         RELIC_SHOP,
         "리의 와플",
         "획득 시, 최대 체력이 7 상승하고 모든 체력을 회복합니다."
-    }
+    }, //index 5
+    {
+    RELIC_PLANISPHERE,
+    RELIC_UNCOMMON,
+    "별자리판",
+    "이벤트 방에 진입할 때마다 체력을 5 회복합니다."
+    },
+    {
+    RELIC_CANDELABRA,
+    RELIC_UNCOMMON,
+    "촛대",
+    "두 번째 턴 시작 시 에너지를 2 얻습니다."
+    },
+    {
+    RELIC_MERCURY_HOURGLASS,
+    RELIC_UNCOMMON,
+    "수은 모래시계",
+    "내 턴 시작 시 모든 적에게 피해를 3 줍니다."
+    },
+    {
+    RELIC_BAG_OF_MARBLES,
+    RELIC_COMMON,
+    "구슬 주머니",
+    "매 전투 시작 시, 모든 적에게 취약을 1 부여합니다."
+    },
+    {
+    RELIC_STRAWBERRY,
+    RELIC_COMMON,
+    "딸기",
+    "획득 시 최대 체력이 7 증가합니다."
+    }, //index 10
+    {
+    RELIC_LANTERN,
+    RELIC_COMMON,
+    "랜턴",
+    "매 전투 시작 시, 추가로 에너지를 1 얻습니다."
+    },
+    {
+    RELIC_RED_MASK,
+    RELIC_COMMON,
+    "붉은 가면",
+    "매 전투 시작 시, 모든 적에게 약화를 1 부여합니다."
+    },
+    {
+    RELIC_BAG_OF_PREPARATION,
+    RELIC_COMMON,
+    "준비된 가방",
+    "매 전투 시작 시, 카드를 추가로 2장 뽑습니다."
+    },
+    {
+    RELIC_MANGO,
+    RELIC_RARE,
+    "망고",
+    "획득 시 최대 체력이 14 증가합니다."
+    },
+    {
+    RELIC_CHANDELIER,
+    RELIC_RARE,
+    "샹들리에",
+    "세 번째 턴 시작 시, 에너지를 3 얻습니다."
+    }, //index 15
+    {
+    RELIC_BRIMSTONE,
+    RELIC_SHOP,
+    "유황",
+    "내 턴 시작 시, 힘을 2 얻고 모든 적이 힘을 1 얻습니다."
+    },
+    {
+    RELIC_CAPTAINS_WHEEL,
+    RELIC_RARE,
+    "선장의 타륜",
+    "세 번째 턴 시작 시, 방어도를 18 얻습니다."
+    },
+    {
+    RELIC_ICE_CREAM,
+    RELIC_RARE,
+    "아이스크림",
+    "턴 종료 시 남은 에너지가 사라지지 않습니다."
+    },
+    {
+    RELIC_STONE_CALENDAR,
+    RELIC_UNCOMMON,
+    "석재 달력",
+    "5턴 종료 시, 모든 적에게 피해를 35 줍니다."
+    },
+    {
+    RELIC_HAPPY_FLOWER,
+    RELIC_COMMON,
+    "행복한 꽃",
+    "3턴마다 에너지를 1 얻습니다."
+    }//index 20
 };
 
 //드랍율에 적용받는 희귀도인지 확인하는 함수
@@ -83,7 +179,20 @@ static void apply_relic_on_obtain(Player *player, Relic relic)
             player->hp = player->max_hp;
         }
         break;
-
+    case RELIC_MANGO:
+        player->max_hp += 14;
+        player->hp += 14;
+        if (player->hp > player->max_hp) {
+            player->hp = player->max_hp;
+        }
+        break;
+    case RELIC_STRAWBERRY:
+        player->max_hp += 7;
+        player->hp += 7;
+        if (player->hp > player->max_hp) {
+            player->hp = player->max_hp;
+        }
+        break;
     case RELIC_OLD_COIN:
 	stats.total_gold_earned += 300;
         player->gold += 300;
@@ -93,7 +202,6 @@ static void apply_relic_on_obtain(Player *player, Relic relic)
         player->max_hp += 7;
         player->hp = player->max_hp;
         break;
-
     default:
         break;
     }
@@ -252,8 +360,10 @@ int grant_random_standard_relic(Player *player, Relic *out_relic)
 }
 
 // 전투 시작 시 발동하는 유물 효과를 적용합니다.
-void apply_relics_on_battle_start(Player *player)
+void apply_relics_on_battle_start(Player *player, Enemy enemies[], int enemy_count)
 {
+    int i;
+
     if (player == NULL) {
         return;
     }
@@ -265,6 +375,57 @@ void apply_relics_on_battle_start(Player *player)
     if (has_relic(player, RELIC_VAJRA)) {
         player->strength += 1;
     }
+    if (has_relic(player, RELIC_LANTERN)) {
+    player->energy += 1;
+    }
+    if (has_relic(player, RELIC_RED_MASK)) {
+    if (enemies == NULL || enemy_count <= 0) {
+        return;
+    }
+
+    if (enemy_count > MAX_ENEMIES) {
+        enemy_count = MAX_ENEMIES;
+    }
+
+    for (i = 0; i < enemy_count; i++) {
+        if (enemies[i].hp <= 0) {
+            continue;
+        }
+
+        if (enemies[i].id == ENEMY_CUBEX_CONSTRUCT &&
+            enemies[i].special_state > 0) {
+            enemies[i].special_state--;
+        } else {
+            enemies[i].weak += 1;
+        }
+    }
+}
+
+    if (has_relic(player, RELIC_BAG_OF_MARBLES)) {
+        if (enemies == NULL || enemy_count <= 0) {
+            return;
+        }
+
+        if (enemy_count > MAX_ENEMIES) {
+            enemy_count = MAX_ENEMIES;
+        }
+
+        for (i = 0; i < enemy_count; i++) {
+            if (enemies[i].hp <= 0) {
+                continue;
+            }
+
+            if (enemies[i].id == ENEMY_CUBEX_CONSTRUCT &&
+                enemies[i].special_state > 0) {
+                enemies[i].special_state--;
+            } else {
+                enemies[i].vulnerable += 1;
+            }
+        }
+    }
+    if (has_relic(player, RELIC_BAG_OF_PREPARATION)) {
+    draw_cards(player, 2);
+}
 }
 
 // 전투 승리 시 발동하는 유물 효과를 적용합니다.
@@ -278,3 +439,131 @@ void apply_relics_on_battle_win(Player *player)
         heal_player(player, 6);
     }
 }
+<<<<<<< HEAD
+=======
+
+//이벤트 스테이지 들어갔을떄 적용되는 유물
+void apply_relics_on_stage_enter(Player *player, StageType stage)
+{
+    if (player == NULL) {
+        return;
+    }
+
+    if (stage == STAGE_EVENT && has_relic(player, RELIC_PLANISPHERE)) {
+        heal_player(player, 5);
+    }
+}
+
+//턴 시작시 적용되는 유물
+void apply_relics_on_turn_start(Player *player, Enemy enemies[], int enemy_count, int turn_number)
+{
+    int i;
+
+    if (player == NULL) {
+        return;
+    }
+
+    if (turn_number == 2 && has_relic(player, RELIC_CANDELABRA)) {
+        player->energy += 2;
+    }
+    if (turn_number == 3 && has_relic(player, RELIC_CHANDELIER)) {
+    player->energy += 3;
+    }
+    if (turn_number == 3 && has_relic(player, RELIC_CAPTAINS_WHEEL)) {
+    player->block += 18;
+    }
+    if (turn_number % 3 == 0 && has_relic(player, RELIC_HAPPY_FLOWER)) {
+    player->energy += 1;
+    }
+    if (has_relic(player, RELIC_MERCURY_HOURGLASS)) {
+        if (enemies == NULL || enemy_count <= 0) {
+            return;
+        }
+
+        if (enemy_count > MAX_ENEMIES) {
+            enemy_count = MAX_ENEMIES;
+        }
+
+        for (i = 0; i < enemy_count; i++) {
+            deal_relic_damage_to_enemy(&enemies[i], 3);
+        }
+    }
+    if (has_relic(player, RELIC_BRIMSTONE)) {
+    player->strength += 2;
+
+    if (enemies != NULL && enemy_count > 0) {
+        if (enemy_count > MAX_ENEMIES) {
+            enemy_count = MAX_ENEMIES;
+        }
+
+        for (i = 0; i < enemy_count; i++) {
+            if (enemies[i].hp > 0) {
+                enemies[i].strength += 1;
+            }
+        }
+    }
+}
+}
+
+//유물에 의한 데미지 처리
+static void deal_relic_damage_to_enemy(Enemy *enemy, int damage)
+{
+    int blocked_damage;
+
+    if (enemy == NULL) {
+        return;
+    }
+
+    if (enemy->hp <= 0 || damage <= 0) {
+        return;
+    }
+
+    if (enemy->block >= damage) {
+        enemy->block -= damage;
+        damage = 0;
+    } else {
+        blocked_damage = enemy->block;
+        enemy->block = 0;
+        damage -= blocked_damage;
+    }
+
+    if ((enemy->id == ENEMY_INLET || enemy->id == ENEMY_VANTOM) &&
+        enemy->special_state > 0 &&
+        damage > 0) {
+        damage = 1;
+        enemy->special_state--;
+    }
+
+    enemy->hp -= damage;
+
+    if (enemy->hp < 0) {
+        enemy->hp = 0;
+    }
+}
+
+//턴이 끝날떄 적용되는 유물
+void apply_relics_on_turn_end(Player *player, Enemy enemies[], int enemy_count, int turn_number)
+{
+    int i;
+
+    if (player == NULL || enemies == NULL || enemy_count <= 0) {
+        return;
+    }
+
+    if (turn_number != 5) {
+        return;
+    }
+
+    if (!has_relic(player, RELIC_STONE_CALENDAR)) {
+        return;
+    }
+
+    if (enemy_count > MAX_ENEMIES) {
+        enemy_count = MAX_ENEMIES;
+    }
+
+    for (i = 0; i < enemy_count; i++) {
+        deal_relic_damage_to_enemy(&enemies[i], 35);
+    }
+}
+>>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c

@@ -21,7 +21,10 @@ int get_random_available_standard_relic(
 );
 
 int grant_random_standard_relic(Player *player, Relic *out_relic);
-void apply_relics_on_battle_start(Player *player);
+void apply_relics_on_battle_start(Player *player, Enemy enemies[], int enemy_count);
 void apply_relics_on_battle_win(Player *player);
+void apply_relics_on_stage_enter(Player *player, StageType stage);
+void apply_relics_on_turn_start(Player *player, Enemy enemies[], int enemy_count, int turn_number);
+void apply_relics_on_turn_end(Player *player, Enemy enemies[], int enemy_count, int turn_number);
 
 #endif

@@ -1,31 +1,8 @@
 #include "card.h"
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
-
-//카드 인덱스
-enum {
-    CARD_INDEX_STRIKE = 0,
-    CARD_INDEX_BASH,
-    CARD_INDEX_DEFEND,
-    CARD_INDEX_SWORD_BOOMERANG,
-    CARD_INDEX_TWIN_STRIKE,
-    CARD_INDEX_BREAKTHROUGH,
-    CARD_INDEX_THUNDERCLAP,
-    CARD_INDEX_IRON_WAVE,
-    CARD_INDEX_POMMEL_STRIKE,
-    CARD_INDEX_BLOODLETTING,
-    CARD_INDEX_TREMBLE, //index 10
-    CARD_INDEX_SHRUG_IT_OFF,
-    CARD_INDEX_BLOOD_WALL,
-    CARD_INDEX_HEMOKINESIS,
-    CARD_INDEX_UPPERCUT,
-    CARD_INDEX_BLUDGEON,
-    CARD_INDEX_TAUNT,
-    CARD_INDEX_INFLAME,
-    CARD_INDEX_OFFERING,
-    CARD_INDEX_IMPERVIOUS, //index 19
-};
 
 //카드 전체 배열
 static const Card card_pool[] = {
@@ -37,7 +14,7 @@ static const Card card_pool[] = {
         .target = TARGET_ENEMY,
         .cost = 1,
 
-        .damage = 999,
+        .damage = 6,
         .block = 0,
 
         .strength = 0,
@@ -528,7 +505,247 @@ static const Card card_pool[] = {
         .hit_count = 0,
 
         .special = SPECIAL_NONE
-    }
+    },
+    {
+    .name = "궁극의 타격",
+    .description = "피해를 14 줍니다.",
+    .type = CARD_ATTACK,
+    .rarity = CARD_RARE,
+    .target = TARGET_ENEMY,
+    .cost = 1,
+
+    .damage = 14,
+    .block = 0,
+
+    .strength = 0,
+    .weak = 0,
+    .vulnerable = 0,
+
+    .draw = 0,
+    .energy = 0,
+
+    .hp_loss = 0,
+
+    .exhaust = 0,
+    .hit_count = 1,
+
+    .special = SPECIAL_NONE
+},
+{
+    .name = "궁극의 수비",
+    .description = "방어도를 11 얻습니다.",
+    .type = CARD_SKILL,
+    .rarity = CARD_RARE,
+    .target = TARGET_SELF,
+    .cost = 1,
+
+    .damage = 0,
+    .block = 11,
+
+    .strength = 0,
+    .weak = 0,
+    .vulnerable = 0,
+
+    .draw = 0,
+    .energy = 0,
+
+    .hp_loss = 0,
+
+    .exhaust = 0,
+    .hit_count = 1,
+
+    .special = SPECIAL_NONE
+},
+{
+    "지옥불",
+    "손에 있는 모든 카드를 소멸시키고 소멸시킨 카드 1장당 피해를 7 줍니다.",
+    CARD_ATTACK,
+    CARD_RARE,
+    TARGET_ENEMY,
+    2,
+    7,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    SPECIAL_FIEND_FIRE
+},
+{
+    "핏빛 망토",
+    "내 턴 시작 시 체력을 1 잃고 방어도를 8 얻습니다.",
+    CARD_POWER,
+    CARD_RARE,
+    TARGET_SELF,
+    1,
+    0,
+    8,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    SPECIAL_CRIMSON_MANTLE
+},
+{
+    "불의 심장",
+    "매 턴 시작 시 에너지를 2 얻습니다.",
+    CARD_POWER,
+    CARD_RARE,
+    TARGET_SELF,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    SPECIAL_PYRE
+},
+{
+    "악마의 형상",
+    "내 턴 시작 시 힘을 2 얻습니다.",
+    CARD_POWER,
+    CARD_RARE,
+    TARGET_SELF,
+    2,
+    0,
+    0,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    SPECIAL_DEMON_FORM
+},
+{
+    "조약의 끝",
+    "소멸 카드 더미에 카드가 3장 이상 있을 때만 사용할 수 있습니다. 모든 적에게 피해를 17 줍니다.",
+    CARD_ATTACK,
+    CARD_RARE,
+    TARGET_ALL_ENEMIES,
+    0,
+    17,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    SPECIAL_PACT_END
+},
+{
+    "제압",
+    "취약을 2 부여합니다. 대상 적이 보유한 취약 수치만큼 힘을 얻습니다. 소멸.",
+    CARD_SKILL,
+    CARD_UNCOMMON,
+    TARGET_ENEMY,
+    1,
+    0,
+    0,
+    0,
+    0,
+    2,
+    0,
+    0,
+    0,
+    1,
+    1,
+    SPECIAL_DOMINATE
+},
+{
+    "잊힌 의식",
+    "이번 턴에 카드를 소멸시켰다면 에너지를 3 얻습니다. 소멸.",
+    CARD_SKILL,
+    CARD_UNCOMMON,
+    TARGET_SELF,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    3,
+    0,
+    1,
+    1,
+    SPECIAL_FORGOTTEN_RITUAL
+},
+{
+    "잿빛 타격",
+    "피해를 6 줍니다. 소멸 카드 더미에 있는 카드 1장당 피해량이 3 증가합니다.",
+    CARD_ATTACK,
+    CARD_UNCOMMON,
+    TARGET_ENEMY,
+    1,
+    6,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    SPECIAL_ASHEN_STRIKE
+},
+{
+    "악의",
+    "피해를 5 줍니다. 이번 턴 동안 스스로 체력을 잃었다면 2번 적중합니다.",
+    CARD_ATTACK,
+    CARD_UNCOMMON,
+    TARGET_ENEMY,
+    0,
+    5,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    SPECIAL_SPITE
+},
+{
+    "녹아내리는 주먹",
+    "피해를 10 줍니다. 적이 보유한 취약이 2배로 증가합니다. 소멸.",
+    CARD_ATTACK,
+    CARD_COMMON,
+    TARGET_ENEMY,
+    1,
+    10,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    SPECIAL_MOLTEN_FIST
+},
 };
 
 //카드 덱에 카드가 몇개 있는지 반환하는 함수
@@ -712,3 +929,114 @@ void prepare_battle_deck(Player *player)
     shuffle_draw_pile(player);
     draw_cards(player, 5);
 }
+<<<<<<< HEAD
+=======
+
+//점액투성이 카드 생성 함수
+Card create_goop_card(void)
+{
+    Card card;
+
+    memset(&card, 0, sizeof(Card));
+
+    strncpy(card.name, "점액투성이", MAX_NAME_LEN - 1);
+    card.name[MAX_NAME_LEN - 1] = '\0';
+
+    strncpy(card.description, "카드를 1장 뽑습니다. 소멸.", sizeof(card.description) - 1);
+    card.description[sizeof(card.description) - 1] = '\0';
+
+    card.type = CARD_STATUS;
+    card.rarity = CARD_COMMON;
+    card.target = TARGET_SELF;
+    card.cost = 1;
+    card.draw = 1;
+    card.exhaust = 1;
+    card.hit_count = 1;
+    card.special = SPECIAL_NONE;
+
+    return card;
+}
+
+//버린 카드 더미에 카드 추가 함수
+int add_card_to_discard(Player *player, Card card)
+{
+    if (player == NULL) {
+        return 0;
+    }
+
+    if (player->discard_count >= MAX_DECK_SIZE) {
+        return 0;
+    }
+
+    player->discard_pile[player->discard_count] = card;
+    player->discard_count++;
+
+    return 1;
+}
+
+//부상 카드 생성 함수
+Card create_wound_card(void)
+{
+    Card card;
+
+    memset(&card, 0, sizeof(Card));
+
+    strncpy(card.name, "부상", MAX_NAME_LEN - 1);
+    card.name[MAX_NAME_LEN - 1] = '\0';
+
+    strncpy(card.description, "사용할 수 없습니다.", sizeof(card.description) - 1);
+    card.description[sizeof(card.description) - 1] = '\0';
+
+    card.type = CARD_STATUS;
+    card.rarity = CARD_COMMON;
+    card.target = TARGET_SELF;
+    card.cost = -1;
+
+    card.damage = 0;
+    card.block = 0;
+    card.strength = 0;
+    card.weak = 0;
+    card.vulnerable = 0;
+    card.draw = 0;
+    card.energy = 0;
+    card.hp_loss = 0;
+    card.exhaust = 0;
+    card.hit_count = 0;
+    card.special = SPECIAL_NONE;
+
+    return card;
+}
+
+//탐욕 카드 생성 함수
+Card create_greed_card(void)
+{
+    Card card;
+
+    memset(&card, 0, sizeof(Card));
+
+    strncpy(card.name, "탐욕", MAX_NAME_LEN - 1);
+    card.name[MAX_NAME_LEN - 1] = '\0';
+
+    strncpy(card.description, "사용할 수 없습니다. 제거할 수 없습니다.", sizeof(card.description) - 1);
+    card.description[sizeof(card.description) - 1] = '\0';
+
+    card.type = CARD_STATUS;
+    card.rarity = CARD_COMMON;
+    card.target = TARGET_SELF;
+    card.cost = -1;
+
+    card.damage = 0;
+    card.block = 0;
+    card.strength = 0;
+    card.weak = 0;
+    card.vulnerable = 0;
+    card.draw = 0;
+    card.energy = 0;
+    card.hp_loss = 0;
+    card.exhaust = 0;
+    card.hit_count = 0;
+    card.special = SPECIAL_NONE;
+
+    return card;
+}
+>>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <time.h>
 #include "game.h"
 #include "card.h"
 #include "ui.h"
@@ -7,10 +8,15 @@
 #include "relic.h"
 #include "player.h"
 #include "shop.h"
+#include "event.h"
 
 static int run_chest_stage(GameState *state);
 static int run_rest_stage(GameState *state);
+
 Statistics stats = {0};
+=======
+static time_t g_play_session_start_time = 0;
+>>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c
 
 // Player에 대한 정보를 게임 시작 상태로 초기화하는 함수
 void init_new_game(GameState *state, const char *username) {
@@ -30,6 +36,7 @@ void init_new_game(GameState *state, const char *username) {
     state->floor = 1;
 
     player = &state->player;
+    state->play_time_seconds = 0;
 
     strncpy(player->name, username, MAX_NAME_LEN - 1);
     player->name[MAX_NAME_LEN - 1] = '\0';
@@ -52,6 +59,7 @@ void init_new_game(GameState *state, const char *username) {
     player->gold = 999;
 
     player->relic_count = 0;
+    add_relic_to_player(player, get_relic_from_pool(0));
 
     player->max_energy = 3;
     player->energy = 3;
@@ -68,7 +76,9 @@ void cleanup_after_battle(Player *player) {
     player->strength = 0;
     player->weak = 0;
     player->vulnerable = 0;
-
+    player->active_power_count = 0;
+    memset(player->active_powers, 0, sizeof(player->active_powers));
+    player->exhausted_this_turn = 0;
     player->draw_count = 0;
     player->hand_count = 0;
     player->discard_count = 0;
@@ -77,6 +87,30 @@ void cleanup_after_battle(Player *player) {
     player->energy = player->max_energy;
 }
 
+//타이머 시작 함수
+void start_play_timer(void)
+{
+    g_play_session_start_time = time(NULL);
+}
+
+//플레이 타임 업데이트 함수
+void update_play_time(GameState *state)
+{
+    time_t now;
+
+    if (state == NULL || g_play_session_start_time == 0) {
+        return;
+    }
+
+    now = time(NULL);
+
+    if (now > g_play_session_start_time) {
+        state->play_time_seconds += (long)(now - g_play_session_start_time);
+        g_play_session_start_time = now;
+    }
+}
+
+//상점 스테이지 실행 함수
 static int run_shop_stage(GameState *state)
 {
     Shop shop;
@@ -92,7 +126,7 @@ static int run_shop_stage(GameState *state)
     }
 
     state->floor++;
-
+    update_play_time(state);
     if (!save_game(state)) {
         return 0;
     }
@@ -101,19 +135,25 @@ static int run_shop_stage(GameState *state)
 }
 
 //전투에서 이긴 후 흐름을 진행하는 함수
-int handle_battle_win(GameState *state) {
+int handle_battle_win(GameState *state, StageType stage)
+{
     if (state == NULL) {
         return 0;
     }
+<<<<<<< HEAD
     stats.battles_won++;
+=======
+>>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c
 
     apply_relics_on_battle_win(&state->player);
 
-    show_battle_reward_screen(state);
+    show_battle_reward_screen(state, stage);
 
     cleanup_after_battle(&state->player);
-    
+
     state->floor++;
+
+    update_play_time(state);
 
     if (!save_game(state)) {
         return 0;
@@ -128,32 +168,23 @@ int handle_battle_lose(GameState *state) {
         return 0;
     }
 
+<<<<<<< HEAD
     show_statistics();
 
     delete_save_file(state->username);
+=======
+    update_play_time(state);
+    show_game_over_screen(state);
+>>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c
 
-    return 1;
-}
-
-//전투 결과 흐름을 판정하는 함수
-int handle_battle_result(GameState *state, BattleResult result) {
-    if (state == NULL) {
-        return 0;
-    }
-
-    if (result == BATTLE_WIN) {
-        return handle_battle_win(state);
-    }
-
-    if (result == BATTLE_LOSE) {
-        return handle_battle_lose(state);
-    }
+    delete_save_file(state->username, state->save_slot);
 
     return 1;
 }
 
 //현재 스테이지 타입에 따라 작동하는 함수
 int run_current_stage(GameState *state) {
+    const MapFloor *map_floor;
     StageType stage;
     BattleResult battle_result;
 
@@ -165,29 +196,40 @@ int run_current_stage(GameState *state) {
         return 0;
     }
 
-    stage = get_default_stage_type(state->floor);
+    map_floor = get_map_floor(state->floor);
 
-    show_current_stage_screen(state->floor, stage);
+    if (map_floor == NULL) {
+        return 0;
+    }
 
+    stage = show_stage_choice_screen(state->floor, map_floor);
+
+    apply_relics_on_stage_enter(&state->player, stage);
     switch (stage) {
     case STAGE_ENEMY:
     case STAGE_ELITE:
     case STAGE_BOSS:
         prepare_battle_deck(&state->player);
-        battle_result = show_temp_battle_screen(state);
+        battle_result = show_temp_battle_screen(state, stage);
 
         if (battle_result == BATTLE_WIN) {
             if (stage == STAGE_BOSS || state->floor == MAX_FLOOR) {
                 cleanup_after_battle(&state->player);
-                delete_save_file(state->username);
+                update_play_time(state);
+                show_game_clear_screen(state);
+
+                delete_save_file(state->username, state->save_slot);
                 return 0;
             }
 
-            return handle_battle_win(state);
+            return handle_battle_win(state, stage);
         }
 
         if (battle_result == BATTLE_LOSE) {
             handle_battle_lose(state);
+            return 0;
+        }
+        if (battle_result == BATTLE_QUIT) {
             return 0;
         }
 
@@ -200,13 +242,7 @@ int run_current_stage(GameState *state) {
     case STAGE_CHEST:
         return run_chest_stage(state);
     case STAGE_EVENT:
-        state->floor++;
-
-        if (!save_game(state)) {
-            return 0;
-        }
-
-        return 1;
+        return run_event_stage(state);
 
     default:
         return 0;
@@ -239,6 +275,7 @@ static int run_rest_stage(GameState *state)
             show_rest_result_screen(healed, &state->player);
 
             state->floor++;
+            update_play_time(state);
 
             if (!save_game(state)) {
                 return 0;
@@ -259,15 +296,17 @@ static int run_rest_stage(GameState *state)
                 continue;
             }
 
-            removed_card = state->player.owned_deck[remove_index];
+removed_card = state->player.owned_deck[remove_index];
 
-            if (!remove_card_from_deck(&state->player, remove_index)) {
-                return 0;
-            }
+if (!remove_card_from_deck(&state->player, remove_index)) {
+    show_card_remove_unavailable_screen();
+    continue;
+}
 
-            show_card_removed_screen(&removed_card);
+show_card_removed_screen(&removed_card);
 
             state->floor++;
+            update_play_time(state);
 
             if (!save_game(state)) {
                 return 0;
@@ -294,7 +333,12 @@ static int run_chest_stage(GameState *state)
     }
 
     state->floor++;
-    save_game(state);
+
+    update_play_time(state);
+
+    if (!save_game(state)) {
+        return 0;
+    }
 
     return 1;
 }
