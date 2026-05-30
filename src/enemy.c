@@ -2,11 +2,8 @@
 #include <stdlib.h>
 
 #include "enemy.h"
-<<<<<<< HEAD
 #include "game.h"
-=======
 #include "card.h"
->>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c
 
 //적 패텀 매크로 함수
 #if 1

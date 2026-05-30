@@ -929,8 +929,6 @@ void prepare_battle_deck(Player *player)
     shuffle_draw_pile(player);
     draw_cards(player, 5);
 }
-<<<<<<< HEAD
-=======
 
 //점액투성이 카드 생성 함수
 Card create_goop_card(void)
@@ -1039,4 +1037,3 @@ Card create_greed_card(void)
 
     return card;
 }
->>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c

@@ -14,11 +14,8 @@
 #include "reward.h"
 #include "shop.h"
 #include "map.h"
-<<<<<<< HEAD
 #include "game.h"
-=======
 #include "save.h"
->>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c
 
 extern volatile sig_atomic_t g_quit_requested;
 
@@ -1491,13 +1488,10 @@ void show_battle_reward_screen(GameState *state, StageType stage)
     selected = 0;
     card_width = 26;
 
-<<<<<<< HEAD
     gold_reward = generate_gold_reward(20, 30);
     stats.total_gold_earned += gold_reward;
     player->gold += gold_reward;
-=======
 has_relic_reward = 0;
->>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c
 
 if (stage == STAGE_ELITE) {
     gold_reward = generate_gold_reward(40, 60);
@@ -2367,7 +2361,6 @@ void show_relic_detail_screen(const Relic *relic)
     refresh();
     getch();
 }
-<<<<<<< HEAD
 void show_statistics()
 {
     clear();
@@ -2383,8 +2376,7 @@ void show_statistics()
     mvprintw(11, 5, "Press any key...");
     refresh();
     getch();
-=======
-
+}
 //이벤트 함수
 
 //이벤트 공생체 화면 함수
@@ -3161,5 +3153,4 @@ void show_game_clear_screen(GameState *state)
 void show_game_over_screen(GameState *state)
 {
     show_run_result_screen(state, 0);
->>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c
 }

@@ -2,13 +2,10 @@
 
 #include "player.h"
 #include "relic.h"
-<<<<<<< HEAD
 #include "game.h"
-=======
 #include "card.h"
 
 static void deal_relic_damage_to_enemy(Enemy *enemy, int damage);
->>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c
 
 //유물 목록
 static const Relic relic_pool[] = {
@@ -439,8 +436,6 @@ void apply_relics_on_battle_win(Player *player)
         heal_player(player, 6);
     }
 }
-<<<<<<< HEAD
-=======
 
 //이벤트 스테이지 들어갔을떄 적용되는 유물
 void apply_relics_on_stage_enter(Player *player, StageType stage)
@@ -566,4 +561,3 @@ void apply_relics_on_turn_end(Player *player, Enemy enemies[], int enemy_count, 
         deal_relic_damage_to_enemy(&enemies[i], 35);
     }
 }
->>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c

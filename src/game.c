@@ -14,9 +14,7 @@ static int run_chest_stage(GameState *state);
 static int run_rest_stage(GameState *state);
 
 Statistics stats = {0};
-=======
 static time_t g_play_session_start_time = 0;
->>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c
 
 // Player에 대한 정보를 게임 시작 상태로 초기화하는 함수
 void init_new_game(GameState *state, const char *username) {
@@ -140,10 +138,7 @@ int handle_battle_win(GameState *state, StageType stage)
     if (state == NULL) {
         return 0;
     }
-<<<<<<< HEAD
     stats.battles_won++;
-=======
->>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c
 
     apply_relics_on_battle_win(&state->player);
 
@@ -168,14 +163,11 @@ int handle_battle_lose(GameState *state) {
         return 0;
     }
 
-<<<<<<< HEAD
     show_statistics();
 
-    delete_save_file(state->username);
-=======
+    delete_save_file(state->username, state->save_slot);
     update_play_time(state);
     show_game_over_screen(state);
->>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c
 
     delete_save_file(state->username, state->save_slot);
 

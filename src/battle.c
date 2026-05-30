@@ -3,9 +3,7 @@
 #include "battle.h"
 #include "card.h"
 #include "relic.h"
-<<<<<<< HEAD
 #include "game.h"
-=======
 #include "enemy.h"
 
 //공포장어용 매크로
@@ -25,7 +23,6 @@ static void remove_card_from_hand(Player *player, int hand_index);
 static int has_active_shrink_effect(Enemy enemies[], int enemy_count);
 static void increase_bygone_effigy_slow(Enemy enemies[], int enemy_count);
 static void lose_player_hp_by_card_or_power(Player *player, int amount);
->>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c
 
 //카드가 몇 번 공격하는지 계산하는 함수.
 static int get_card_hit_count(const Card *card)
@@ -236,15 +233,12 @@ static void deal_damage_to_enemy(Player *player, Enemy *enemy, int damage)
             enemy->block = 0;
         }
     }
-<<<<<<< HEAD
 
     stats.total_damage_dealt += final_damage;
-=======
     if ((enemy->id == ENEMY_INLET || enemy->id == ENEMY_VANTOM) &&enemy->special_state > 0 &&final_damage > 0) {
     final_damage = 1;
     enemy->special_state--;
 }
->>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c
     enemy->hp -= final_damage;
 
     if (enemy->hp <= 0) {
@@ -955,8 +949,6 @@ BattleResult check_battle_result(Player *player, Enemy enemies[], int enemy_coun
 
     return BATTLE_CONTINUE;
 }
-<<<<<<< HEAD
-=======
 
 //압축벌레가 살아있고 첫턴이 지났는지 확인하는 함수
 static int has_active_shrink_effect(Enemy enemies[], int enemy_count)
@@ -1002,4 +994,3 @@ static void increase_bygone_effigy_slow(Enemy enemies[], int enemy_count)
     }
 }
 
->>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c

@@ -11,7 +11,6 @@ int handle_battle_lose(GameState *state);
 
 int run_current_stage(GameState *state);
 
-<<<<<<< HEAD
 typedef struct {
     int enemies_defeated;
     int battles_won;
@@ -24,9 +23,7 @@ typedef struct {
 } Statistics;
 
 extern Statistics stats;
-=======
 void start_play_timer(void);
 void update_play_time(GameState *state);
 
->>>>>>> bdf9c9d15eab48477b408ea0a91012e118b9a69c
 #endif
