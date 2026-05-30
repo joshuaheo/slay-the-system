@@ -13,6 +13,7 @@
 #include "reward.h"
 #include "shop.h"
 #include "map.h"
+#include "game.h"
 
 //ncurses 시작 함수
 void init_ui(void) {
@@ -624,6 +625,7 @@ void show_battle_reward_screen(GameState *state)
     card_width = 26;
 
     gold_reward = generate_gold_reward(20, 30);
+    stats.total_gold_earned += gold_reward;
     player->gold += gold_reward;
 
     generate_card_rewards(rewards, CARD_REWARD_COUNT);
@@ -1423,6 +1425,22 @@ void show_relic_detail_screen(const Relic *relic)
     mvprintw(LINES - 2, 3,
              "[ 아무 키나 누르면 돌아갑니다 ]");
 
+    refresh();
+    getch();
+}
+void show_statistics()
+{
+    clear();
+
+    mvprintw(2, 5, "===== Statistics =====");
+    mvprintw(4, 5, "Enemies Defeated : %d", stats.enemies_defeated);
+    mvprintw(5, 5, "Battles Won      : %d", stats.battles_won);
+    mvprintw(6, 5, "Damage Dealt     : %d", stats.total_damage_dealt);
+    mvprintw(7, 5, "Damage Taken     : %d", stats.total_damage_taken);
+    mvprintw(8, 5, "Gold Earned      : %d", stats.total_gold_earned);
+    mvprintw(9, 5, "Cards Played     : %d", stats.cards_played);
+
+    mvprintw(11, 5, "Press any key...");
     refresh();
     getch();
 }

@@ -2,6 +2,7 @@
 
 #include "player.h"
 #include "relic.h"
+#include "game.h"
 
 //유물 목록
 static const Relic relic_pool[] = {
@@ -84,6 +85,7 @@ static void apply_relic_on_obtain(Player *player, Relic relic)
         break;
 
     case RELIC_OLD_COIN:
+	stats.total_gold_earned += 300;
         player->gold += 300;
         break;
 

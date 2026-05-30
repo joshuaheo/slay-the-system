@@ -33,5 +33,7 @@ void show_relic_inventory_screen(const Player *player);
 void show_card_detail_screen(const Card *card);
 void show_relic_detail_screen(const Relic *relic);
 
+void show_statistics(void);
+
 int show_shop_screen(GameState *state, Shop *shop);
 #endif

@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "enemy.h"
+#include "game.h"
 
 //슬라임 생성 함수
 void init_slime(Enemy *enemy)
@@ -96,6 +97,7 @@ void enemy_attack_player(Enemy *enemy, Player *player)
         damage -= blocked_damage;
     }
 
+    stats.total_damage_taken += damage;
     player->hp -= damage;
 
     if (player->hp < 0) {

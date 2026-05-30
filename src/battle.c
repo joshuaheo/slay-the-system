@@ -3,6 +3,7 @@
 #include "battle.h"
 #include "card.h"
 #include "relic.h"
+#include "game.h"
 
 //카드가 몇 번 공격하는지 계산하는 함수.
 static int get_card_hit_count(const Card *card)
@@ -165,9 +166,11 @@ static void deal_damage_to_enemy(Player *player, Enemy *enemy, int damage)
         }
     }
 
+    stats.total_damage_dealt += final_damage;
     enemy->hp -= final_damage;
 
-    if (enemy->hp < 0) {
+    if (enemy->hp <= 0) {
+	stats.enemies_defeated++;
         enemy->hp = 0;
     }
 }
@@ -441,6 +444,7 @@ int play_card(Player *player, Enemy enemies[], int enemy_count, int hand_index, 
 
     move_used_card(player, card);
 
+    stats.cards_played++;
     return 1;
 }
 

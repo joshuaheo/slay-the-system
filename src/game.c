@@ -10,6 +10,7 @@
 
 static int run_chest_stage(GameState *state);
 static int run_rest_stage(GameState *state);
+Statistics stats = {0};
 
 // Player에 대한 정보를 게임 시작 상태로 초기화하는 함수
 void init_new_game(GameState *state, const char *username) {
@@ -18,6 +19,8 @@ void init_new_game(GameState *state, const char *username) {
     if (state == NULL || username == NULL) {
         return;
     }
+
+    memset(&stats, 0, sizeof(stats));
 
     memset(state, 0, sizeof(GameState));
 
@@ -102,6 +105,8 @@ int handle_battle_win(GameState *state) {
     if (state == NULL) {
         return 0;
     }
+    stats.battles_won++;
+
     apply_relics_on_battle_win(&state->player);
 
     show_battle_reward_screen(state);
@@ -122,6 +127,8 @@ int handle_battle_lose(GameState *state) {
     if (state == NULL) {
         return 0;
     }
+
+    show_statistics();
 
     delete_save_file(state->username);
 
