@@ -58,6 +58,8 @@ static void terror_eel_take_turn(Enemy *enemy, Player *player);
 static void vantom_take_turn(Enemy *enemy, Player *player);
 #endif
 
+static int choose_next_sludge_spinner_action(int previous_action);
+
 //enemy_move 초기화 함수
 static void clear_enemy_move(EnemyMove *move)
 {

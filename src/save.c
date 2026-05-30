@@ -1,7 +1,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -130,7 +129,7 @@ int save_game(const GameState *state)
     }
 
     if (!make_save_path(state->username, state->save_slot, path, sizeof(path))) {
-    return 0;
+        return 0;
     }
 
     fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);

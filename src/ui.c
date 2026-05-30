@@ -635,7 +635,7 @@ if (final_result != BATTLE_CONTINUE) {
             normalize_selected_index(&selected, hand_count);
         }
         else if (ch == 'q' || ch == 'Q') {
-            final_result = BATTLE_CONTINUE;
+            final_result = BATTLE_QUIT;
             break;
         }
     }
@@ -1892,29 +1892,25 @@ void show_card_remove_unavailable_screen(void)
 void show_relic_obtained_screen(const char *title, const Relic *relic)
 {
     int rows;
-    int cols;
     const char *screen_title;
-    int desc_x;
+    char relic_name_line[128];
 
     if (relic == NULL) {
         return;
     }
 
-    getmaxyx(stdscr, rows, cols);
+    rows = getmaxy(stdscr);
 
     screen_title = title != NULL ? title : "유물 획득";
-    desc_x = (cols - (int)strlen(relic->description)) / 2;
-    if (desc_x < 0) {
-        desc_x = 0;
-    }
+    snprintf(relic_name_line, sizeof(relic_name_line), "[ %s ]", relic->name);
 
     clear();
 
-    mvprintw(rows / 2 - 5, (cols - (int)strlen(screen_title)) / 2, "%s", screen_title);
-    mvprintw(rows / 2 - 3, (cols - 24) / 2, "새로운 유물을 얻었습니다!");
-    mvprintw(rows / 2 - 1, (cols - (int)strlen(relic->name) - 4) / 2, "[ %s ]", relic->name);
-    mvprintw(rows / 2 + 1, desc_x, "%s", relic->description);
-    mvprintw(rows / 2 + 4, (cols - 30) / 2, "아무 키나 누르면 진행합니다.");
+    print_centered(rows / 2 - 5, screen_title);
+    print_centered(rows / 2 - 3, "새로운 유물을 얻었습니다!");
+    print_centered(rows / 2 - 1, relic_name_line);
+    print_centered(rows / 2 + 1, relic->description);
+    print_centered(rows / 2 + 4, "아무 키나 누르면 진행합니다.");
 
     refresh();
     getch();
@@ -2105,11 +2101,11 @@ int show_shop_screen(GameState *state, Shop *shop)
             return 1;
         }
 
-        if (ch == KEY_UP) {
+        if (ch == KEY_UP || ch == 'w' || ch == 'W') {
             if (selected > 0) {
                 selected--;
             }
-        } else if (ch == KEY_DOWN) {
+        } else if (ch == KEY_DOWN || ch == 's' || ch == 'S') {
             if (selected < shop->item_count - 1) {
                 selected++;
             }
@@ -2659,7 +2655,7 @@ void show_mutating_forest_removed_screen(const Card removed_cards[], int removed
 {
     clear();
 
-    mvprintw(5, 5, "변천체들이 당신의 주머니와 기억을 뒤흔듭니다.");
+    mvprintw(5, 5, "변성체들이 당신의 주머니와 기억을 뒤흔듭니다.");
     mvprintw(7, 5, "잃은 골드: %d", lost_gold);
 
     if (removed_count <= 0) {
@@ -2691,7 +2687,7 @@ void show_max_hp_increased_screen(const Player *player, int amount)
 {
     clear();
 
-    mvprintw(5, 5, "변천체 하나가 당신에게 조용히 다가옵니다.");
+    mvprintw(5, 5, "변성체 하나가 당신에게 조용히 다가옵니다.");
     mvprintw(7, 5, "최대 체력이 %d 증가했습니다.", amount);
 
     if (player != NULL) {

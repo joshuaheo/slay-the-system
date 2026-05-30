@@ -50,7 +50,7 @@ void init_new_game(GameState *state, const char *username) {
     player->discard_count = 0;
     player->exhaust_count = 0;
 
-    player->gold = 999;
+    player->gold = 300;
 
     player->relic_count = 0;
     add_relic_to_player(player, get_relic_from_pool(0));
@@ -267,7 +267,6 @@ static int run_rest_stage(GameState *state)
 
             return 1;
         }
-
         if (choice == 2) {
             if (!can_remove_card_from_deck(&state->player)) {
                 show_card_remove_unavailable_screen();
@@ -280,14 +279,14 @@ static int run_rest_stage(GameState *state)
                 continue;
             }
 
-removed_card = state->player.owned_deck[remove_index];
+            removed_card = state->player.owned_deck[remove_index];
 
-if (!remove_card_from_deck(&state->player, remove_index)) {
-    show_card_remove_unavailable_screen();
-    continue;
-}
+            if (!remove_card_from_deck(&state->player, remove_index)) {
+                show_card_remove_unavailable_screen();
+                continue;
+            }
 
-show_card_removed_screen(&removed_card);
+            show_card_removed_screen(&removed_card);
 
             state->floor++;
             update_play_time(state);
